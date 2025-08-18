@@ -1,213 +1,396 @@
+<!-- client/public/test-api.html -->
 <!DOCTYPE html>
-<html lang="en">
+<html lang="he" dir="rtl">
 <head>
   <meta charset="UTF-8" />
-  <title>Test All APIs (JWT Enabled)</title>
+  <title>API Tester — ShoppingWebsite (Full)</title>
+  <style>
+    body{font-family:system-ui,Segoe UI,Roboto,Arial,sans-serif;margin:20px;background:#0d1117;color:#e6edf3}
+    h1,h2{margin:0 0 10px}
+    .row{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:14px}
+    .card{background:#161b22;border:1px solid #30363d;border-radius:12px;padding:14px}
+    label{display:block;margin-top:8px;font-size:14px}
+    input,textarea,select{width:100%;padding:8px;margin-top:4px;border-radius:8px;border:1px solid #30363d;background:#0d1117;color:#e6edf3}
+    input[type=file]{padding:4px}
+    button{margin-top:10px;padding:8px 14px;border:0;border-radius:8px;background:#238636;color:#fff;cursor:pointer}
+    button.secondary{background:#30363d}
+    .log{background:#0d1117;border:1px solid #30363d;border-radius:8px;padding:10px;max-height:300px;overflow:auto;white-space:pre-wrap}
+    .pill{background:#30363d;padding:2px 6px;border-radius:999px;font-size:12px}
+    .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px}
+    .prod{background:#0d1117;border:1px solid #30363d;border-radius:10px;overflow:hidden}
+    .prod img{width:100%;height:140px;object-fit:cover;background:#111}
+    .prod .p{padding:8px}
+    .small{font-size:12px;opacity:.9}
+  </style>
 </head>
 <body>
-  <h1>🔐 API Tester (JWT Enabled)</h1>
+<h1>API Tester — ShoppingWebsite (Full)</h1>
 
-  <h2>👤 Authentication</h2>
-  <button onclick="login()">Login (Admin/User)</button>
-  <button onclick="register()">Register (User/Admin)</button>
-  <p><strong>Current token:</strong> <code id="tokenDisplay">Not logged in</code></p>
+<div class="card">
+  <h2>הגדרות</h2>
+  <label>Base URL</label><input id="baseUrl" value="http://localhost:5000"/>
+  <div>Token: <span id="token" class="pill">—</span> <button id="clearToken" class="secondary">נקה</button></div>
+  <button id="pingBtn" class="secondary">בדיקת GET /api/products</button>
+</div>
 
-  <hr />
+<div class="row">
+  <div class="card">
+    <h2>Auth</h2>
+    <label>Email</label><input id="email" value="admin@example.com"/>
+    <label>Password</label><input id="password" type="password" value="Admin1234!"/>
+    <button id="loginBtn">Login</button>
+    <label style="margin-top:12px">רישום מהיר</label>
+    <input id="regName" placeholder="Demo User"/>
+    <input id="regEmail" placeholder="demo@example.com"/>
+    <input id="regPass" type="password" placeholder="Demo1234!"/>
+    <button id="registerBtn" class="secondary">Register</button>
+  </div>
 
-  <h2>📦 Products</h2>
-  <button onclick="get('/api/products')">GET all products</button>
-  <button onclick="getById('product')">GET /api/products/:id</button>
+  <div class="card">
+    <h2>Categories</h2>
+    <label>Name</label><input id="catName" placeholder="Electronics"/>
+    <button id="createCatBtn">Create Category</button>
+    <button id="getCatsBtn" class="secondary">Get Categories</button>
+    <div id="catsList" class="small" style="margin-top:8px"></div>
+  </div>
 
-  <h2>📂 Categories</h2>
-  <button onclick="get('/api/categories')">GET all categories</button>
-  <button onclick="post('/api/categories', { name: prompt('Category name:') })">POST new category (admin)</button>
+  <div class="card">
+    <h2>Products</h2>
+    <label>Name</label><input id="pName" value="Wireless Mouse"/>
+    <label>Description</label><input id="pDesc" value="Bluetooth mouse with long battery life"/>
+    <label>Price</label><input id="pPrice" value="79.90"/>
+    <label>Stock</label><input id="pStock" value="100"/>
+    <label>Category ID</label><input id="pCatId" value="1"/>
+    <label>Image</label><input id="pImage" type="file" accept="image/*"/>
+    <button id="createProdBtn">Create Product</button>
+    <button id="getProdsBtn" class="secondary">Get Products</button>
+    <div id="prods" class="grid" style="margin-top:10px"></div>
+  </div>
 
-  <h2>👥 Users</h2>
-  <button onclick="get('/api/users')">GET all users (admin only)</button>
-  <button onclick="getById('user')">GET /api/users/:id</button>
-  
-  <h2>🛒 Cart</h2>
-  <button onclick="get('/api/cart')">GET user cart</button>
-  <button onclick="addToCart()">POST add to cart</button>
-  <button onclick="updateCartItem()">PUT update cart item</button>
-  <button onclick="deleteCartItem()">DELETE cart item</button>
+  <div class="card">
+    <h2>Update/Delete Product</h2>
+    <label>productId</label><input id="uProdId"/>
+    <label>new price (opt)</label><input id="uPrice" placeholder="89.90"/>
+    <label>new image (opt)</label><input id="uImage" type="file" accept="image/*"/>
+    <button id="updateProdBtn">Update Product</button>
+    <label style="margin-top:12px">productId למחיקה</label><input id="dProdId"/>
+    <button id="deleteProdBtn" class="secondary">Delete Product</button>
+  </div>
 
-  <hr />
-  <h2>🧾 Orders</h2>
-  <button onclick="createOrder()">POST create order (from cart)</button>
-  <button onclick="get('/api/orders')">GET my orders</button>
-  <button onclick="getOrderById()">GET order by ID</button>
-  <button onclick="get('/api/orders/all/admin')">GET all orders (admin only)</button>
+  <div class="card">
+    <h2>Cart</h2>
+    <label>Product ID</label><input id="cartProdId"/>
+    <label>Quantity</label><input id="cartQty" value="1"/>
+    <button id="addCartBtn">Add To Cart</button>
+    <button id="getCartBtn" class="secondary">Get Cart</button>
+    <div id="cartBox" class="small" style="margin-top:8px"></div>
+  </div>
 
-  
-  <hr />
-  <pre id="output"></pre>
-  <hr />
-  
-  <h2>➕ Add Product (with image)</h2>
-  <form id="productForm">
-    <input type="text" name="name" placeholder="Product name" required /><br />
-    <input type="text" name="description" placeholder="Description" /><br />
-    <input type="number" name="price" placeholder="Price" step="0.01" required /><br />
-    <input type="number" name="stock" placeholder="Stock" /><br />
-    <input type="number" name="category_id" placeholder="Category ID" required /><br />
-    <input type="file" name="image" accept="image/*" required /><br />
-    <button type="submit">Upload Product</button>
-  </form>
+  <div class="card">
+    <h2>Orders</h2>
+    <button id="createOrderBtn">Create Order</button>
+    <button id="getOrdersBtn" class="secondary">Get Orders</button>
+    <div id="ordersBox" class="small" style="margin-top:8px"></div>
+  </div>
 
+  <div class="card">
+    <h2>Reviews</h2>
+    <label>Product ID</label><input id="revProdId"/>
+    <label>Rating (1–5)</label><input id="revRating" value="5"/>
+    <label>Comment</label><textarea id="revComment"></textarea>
+    <button id="addReviewBtn">Add Review</button>
+    <button id="getReviewsBtn" class="secondary">Get Reviews for Product</button>
+    <div id="reviewsBox" class="small" style="margin-top:8px"></div>
+    <label>Review ID</label><input id="revId" placeholder="Enter Review ID"/>
+    <button id="updateReviewBtn">Update Review</button>
+  </div>
 
-  <script>
-    let token = '';
+  <div class="card">
+    <h2>Password Reset</h2>
+    <label>Email</label><input id="resetEmail" placeholder="example@example.com"/>
+    <label>New Password</label><input id="resetPassword" type="password" placeholder="NewPassword123!"/>
+    <button id="resetPasswordBtn">Reset Password</button>
+  </div>
 
-    const login = async () => {
-      const email = prompt('Email:');
-      const password = prompt('Password:');
-      const res = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password })
-      });
+  <div class="card">
+    <h2>Search Products</h2>
+    <label>Query</label><input id="searchQuery" placeholder="Search term"/>
+    <label>Category ID (optional)</label><input id="searchCategoryId" placeholder="Category ID"/>
+    <button id="searchProductsBtn">Search</button>
+    <div id="searchResults" class="grid" style="margin-top:10px"></div>
+  </div>
 
-      const data = await res.json();
-      token = data.token || '';
-      document.getElementById('tokenDisplay').textContent = token ? '✅ Logged in' : '❌ Login failed';
-      display(data);
+  <div class="card">
+    <h2>Recommended Products</h2>
+    <button id="recommendProductsBtn">Get Recommendations</button>
+    <div id="recommendResults" class="grid" style="margin-top:10px"></div>
+  </div>
+
+  <div class="card">
+    <h2>Average Rating</h2>
+    <label>Product ID</label><input id="avgRatingProdId" placeholder="Product ID"/>
+    <button id="getAvgRatingBtn">Get Average Rating</button>
+    <div id="avgRatingResult" class="small" style="margin-top:10px"></div>
+  </div>
+
+  <div class="card">
+    <h2>Admin: Manage Users</h2>
+    <button id="getAllUsersBtn">Get All Users</button>
+    <div id="usersList" class="small" style="margin-top:10px"></div>
+  </div>
+</div>
+
+<div class="card">
+  <h2>לוג</h2>
+  <div id="log" class="log"></div>
+</div>
+
+<script>
+const logEl = document.getElementById('log');
+const catsList = document.getElementById('catsList');
+const prodsEl = document.getElementById('prods');
+const cartBox = document.getElementById('cartBox');
+const ordersBox = document.getElementById('ordersBox');
+const reviewsBox = document.getElementById('reviewsBox');
+
+function log(...a){ logEl.textContent = `[${new Date().toLocaleTimeString()}] ${a.join(' ')}\n` + logEl.textContent; }
+function base(){ return document.getElementById('baseUrl').value.trim().replace(/\/+$/,''); }
+function token(){ return localStorage.getItem('jwt')||''; }
+function setToken(t){ if(t){localStorage.setItem('jwt',t);document.getElementById('token').textContent=t.slice(0,18)+'…';} else {localStorage.removeItem('jwt');document.getElementById('token').textContent='—';} }
+setToken(token());
+
+// robust fetch: read as text first to avoid "body stream already read"
+async function api(path, opt={}){
+  const headers = opt.headers || {};
+  if(token()) headers['Authorization']='Bearer '+token();
+  let body = opt.body;
+  const isForm = (body instanceof FormData);
+  if(body && !isForm){ headers['Content-Type']='application/json'; body = JSON.stringify(body); }
+  const res = await fetch(base()+path, { method: opt.method||'GET', headers, body });
+  const text = await res.text();                // ← קוראים פעם אחת
+  let data; try { data = text ? JSON.parse(text) : null; } catch(_) { data = text; }
+  if(!res.ok) throw (typeof data==='string' ? { message: data } : data);
+  return data;
+}
+
+// PING
+document.getElementById('pingBtn').onclick = async ()=>{
+  try{ const d = await api('/api/products'); log('PING OK', JSON.stringify({count: Array.isArray(d)?d.length:0})); renderProducts(Array.isArray(d)?d:[]); }
+  catch(e){ log('PING ERR', JSON.stringify(e)); }
+};
+
+// AUTH
+document.getElementById('loginBtn').onclick = async ()=>{
+  try{ const d=await api('/api/auth/login',{method:'POST',body:{email:email.value,password:password.value}}); setToken(d.token); log('Login OK', JSON.stringify(d)); }
+  catch(e){ log('Login ERR', JSON.stringify(e)); }
+};
+document.getElementById('registerBtn').onclick = async ()=>{
+  try{ const d=await api('/api/auth/register',{method:'POST',body:{name:regName.value,email:regEmail.value,password:regPass.value}}); log('Register OK', JSON.stringify(d)); }
+  catch(e){ log('Register ERR', JSON.stringify(e)); }
+};
+document.getElementById('clearToken').onclick = ()=> setToken('');
+
+// CATEGORIES
+document.getElementById('createCatBtn').onclick = async ()=>{
+  try{ const d=await api('/api/categories',{method:'POST',body:{name:catName.value}}); log('Category OK', JSON.stringify(d)); }
+  catch(e){ log('Category ERR', JSON.stringify(e)); }
+};
+document.getElementById('getCatsBtn').onclick = async ()=>{
+  try{ const d=await api('/api/categories'); catsList.textContent = JSON.stringify(d,null,2); log('Cats', JSON.stringify({count:d.length})); }
+  catch(e){ log('Cats ERR', JSON.stringify(e)); }
+};
+
+// PRODUCTS
+document.getElementById('createProdBtn').onclick = async ()=>{
+  try{
+    const fd=new FormData();
+    fd.append('name', pName.value); fd.append('description', pDesc.value);
+    fd.append('price', pPrice.value); fd.append('stock', pStock.value);
+    fd.append('category_id', pCatId.value);
+    if(pImage.files[0]) fd.append('image', pImage.files[0]);
+    const d=await api('/api/products',{method:'POST',body:fd});
+    log('Product OK', JSON.stringify(d));
+    await getProducts();
+  }catch(e){ log('Product ERR', JSON.stringify(e)); }
+};
+document.getElementById('getProdsBtn').onclick = ()=> getProducts();
+async function getProducts(){
+  try{ const d=await api('/api/products'); console.log('Products', JSON.stringify({count:d.length}), d); renderProducts(d); }
+  catch(e){ log('Products ERR', JSON.stringify(e)); }
+}
+function renderProducts(items){
+  prodsEl.innerHTML='';
+  for(const p of items){
+    const card=document.createElement('div'); card.className='prod';
+    const url = p.imageUrl ? (base()+p.imageUrl) : '';
+    card.innerHTML = `
+      ${url?`<img src="${url}" alt="">`:'<div style="height:140px;display:flex;align-items:center;justify-content:center;color:#9fb0c3">no image</div>'}
+      <div class="p">
+        <div><strong>${p.name||''}</strong> <span class="small">#${p.id}</span></div>
+        <div class="small">${p.description||''}</div>
+        <div class="small">₪${p.price} | stock: ${p.stock}</div>
+        ${p.image_id?`<div class="small">image_id: ${p.image_id}</div>`:''}
+        <button data-id="${p.id}" class="secondary" style="margin-top:6px">Load Reviews</button>
+      </div>`;
+    card.querySelector('button').onclick = async ()=> {
+      revProdId.value = p.id;
+      await getReviewsFor(p.id);
     };
-
-    const register = async () => {
-      const name = prompt('Name:');
-      const email = prompt('Email:');
-      const password = prompt('Password:');
-      const role = prompt('Role (user/admin):');
-
-      const res = await fetch('/api/auth/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, password, role })
-      });
-
-      const data = await res.json();
-      token = data.token || '';
-      document.getElementById('tokenDisplay').textContent = token ? '✅ Registered & logged in' : '❌ Register failed';
-      display(data);
-    };
-
-    const get = async (url) => {
-      const res = await fetch(url, {
-        headers: token ? { Authorization: `Bearer ${token}` } : {}
-      });
-      const data = await res.json();
-      display(data);
-    };
-
-    const getById = async (type) => {
-      const id = prompt(`Enter ${type} ID:`);
-      const res = await fetch(`/api/${type}s/${id}`, {
-        headers: token ? { Authorization: `Bearer ${token}` } : {}
-      });
-      const data = await res.json();
-      display(data);
-    };
-
-    const post = async (url, body) => {
-      const res = await fetch(url, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token && { Authorization: `Bearer ${token}` })
-        },
-        body: JSON.stringify(body)
-      });
-      const data = await res.json();
-      display(data);
-    };
-
-    const display = (data) => {
-      document.getElementById('output').textContent = JSON.stringify(data, null, 2);
-    };
-    // Handle product form submission
-    document.getElementById('productForm').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const form = e.target;
-      const formData = new FormData(form);
-    
-      try {
-        const res = await fetch('/api/products', {
-          method: 'POST',
-          headers: token ? { Authorization: `Bearer ${token}` } : {},
-          body: formData
-        });
-      
-        const data = await res.json();
-        display(data);
-      } catch (err) {
-        display({ error: err.message });
-      }
-    });
-
-    async function addToCart() {
-      const product_id = prompt('Product ID:');
-      const quantity = prompt('Quantity:');
-      const res = await fetch('/api/cart', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token && { Authorization: `Bearer ${token}` })
-        },
-        body: JSON.stringify({ product_id, quantity })
-      });
-      const data = await res.json();
-      display(data);
-    }
-
-    async function updateCartItem() {
-    const id = prompt('Cart item ID:');
-    const quantity = prompt('New quantity:');
-    const res = await fetch(`/api/cart/${id}`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        ...(token && { Authorization: `Bearer ${token}` })
-      },
-      body: JSON.stringify({ quantity })
-    });
-    const data = await res.json();
-    display(data);
+    prodsEl.appendChild(card);
   }
+}
 
-    async function deleteCartItem() {
-      const id = prompt('Cart item ID to delete:');
-      const res = await fetch(`/api/cart/${id}`, {
-        method: 'DELETE',
-        headers: token ? { Authorization: `Bearer ${token}` } : {}
-      });
-      const data = await res.json();
-      display(data);
-    }
-  
-    async function createOrder() {
-      const res = await fetch('/api/orders', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token && { Authorization: `Bearer ${token}` })
-        }
-      });
-      const data = await res.json();
-      display(data);
-    }
-  
-    async function getOrderById() {
-      const id = prompt('Enter order ID:');
-      const res = await fetch(`/api/orders/${id}`, {
-        headers: token ? { Authorization: `Bearer ${token}` } : {}
-      });
-      const data = await res.json();
-      display(data);
-    }
+// UPDATE / DELETE
+document.getElementById('updateProdBtn').onclick = async ()=>{
+  try{
+    const id=uProdId.value.trim(); if(!id) return alert('productId?');
+    const fd=new FormData(); if(uPrice.value) fd.append('price',uPrice.value);
+    if(uImage.files[0]) fd.append('image',uImage.files[0]);
+    const d=await api('/api/products/'+id,{method:'PUT',body:fd});
+    log('Update OK', JSON.stringify(d)); await getProducts();
+  }catch(e){ log('Update ERR', JSON.stringify(e)); }
+};
+document.getElementById('deleteProdBtn').onclick = async ()=>{
+  try{ const id=dProdId.value.trim(); if(!id) return alert('productId?');
+    const d=await api('/api/products/'+id,{method:'DELETE'}); log('Delete OK', JSON.stringify(d)); await getProducts();
+  }catch(e){ log('Delete ERR', JSON.stringify(e)); }
+};
 
+// CART
+document.getElementById('addCartBtn').onclick = async ()=>{
+  try{ const d=await api('/api/cart',{method:'POST',body:{product_id:cartProdId.value,quantity:cartQty.value}}); log('Cart Add OK', JSON.stringify(d)); }
+  catch(e){ log('Cart Add ERR', JSON.stringify(e)); }
+};
+document.getElementById('getCartBtn').onclick = async ()=>{
+  try{ const d=await api('/api/cart'); cartBox.textContent=JSON.stringify(d,null,2); log('Cart', JSON.stringify({count:(d.items||[]).length})); }
+  catch(e){ log('Cart ERR', JSON.stringify(e)); }
+};
 
+// ORDERS
+document.getElementById('createOrderBtn').onclick = async ()=>{
+  try{ const d=await api('/api/orders',{method:'POST'}); log('Order OK', JSON.stringify(d)); }
+  catch(e){ log('Order ERR', JSON.stringify(e)); }
+};
+document.getElementById('getOrdersBtn').onclick = async ()=>{
+  try{ const d=await api('/api/orders'); ordersBox.textContent=JSON.stringify(d,null,2); log('Orders', JSON.stringify({count:d.length})); }
+  catch(e){ log('Orders ERR', JSON.stringify(e)); }
+};
 
-  </script>
+// REVIEWS
+document.getElementById('addReviewBtn').onclick = async ()=>{
+  try{
+    const pid = revProdId.value.trim();
+    const body = { rating: Number(revRating.value), comment: revComment.value };
+    const d=await api(`/api/products/${pid}/reviews`,{method:'POST',body});
+    log('Review OK', JSON.stringify(d)); await getReviewsFor(pid);
+  }catch(e){ log('Review ERR', JSON.stringify(e)); }
+};
+document.getElementById('getReviewsBtn').onclick = async ()=>{
+  const pid = revProdId.value.trim(); await getReviewsFor(pid);
+};
+async function getReviewsFor(pid){
+  try{
+    const d=await api(`/api/products/${pid}/reviews`);
+    reviewsBox.textContent = JSON.stringify(d,null,2);
+    log('Reviews', JSON.stringify({productId:pid, count:d.length}));
+  }catch(e){ log('Reviews ERR', JSON.stringify(e)); }
+}
+
+document.getElementById('updateReviewBtn').onclick = async () => {
+  try {
+    const pid = revProdId.value.trim();
+    const rid = revId.value.trim();
+    const body = { rating: Number(revRating.value), comment: revComment.value };
+    const d = await api(`/api/products/${pid}/reviews/${rid}`, { method: 'PUT', body });
+    log('Review Update OK', JSON.stringify(d));
+    await getReviewsFor(pid);
+  } catch (e) {
+    log('Review Update ERR', JSON.stringify(e));
+  }
+};
+
+// Password Reset
+const resetPasswordBtn = document.getElementById('resetPasswordBtn');
+resetPasswordBtn.onclick = async () => {
+  try {
+    const email = document.getElementById('resetEmail').value;
+    const newPassword = document.getElementById('resetPassword').value;
+    const d = await api('/api/auth/reset-password', { method: 'POST', body: { email, newPassword } });
+    log('Password Reset OK', JSON.stringify(d));
+  } catch (e) {
+    log('Password Reset ERR', JSON.stringify(e));
+  }
+};
+
+// Search Products
+const searchProductsBtn = document.getElementById('searchProductsBtn');
+searchProductsBtn.onclick = async () => {
+  try {
+    const query = document.getElementById('searchQuery').value;
+    const categoryId = document.getElementById('searchCategoryId').value;
+    const d = await api(`/api/products/search?query=${query}&categoryId=${categoryId}`);
+    renderProducts(d, 'searchResults');
+    log('Search Products OK', JSON.stringify(d));
+  } catch (e) {
+    log('Search Products ERR', JSON.stringify(e));
+  }
+};
+
+// Recommended Products
+const recommendProductsBtn = document.getElementById('recommendProductsBtn');
+recommendProductsBtn.onclick = async () => {
+  try {
+    const d = await api('/api/products/recommend');
+    renderProducts(d, 'recommendResults');
+    log('Recommended Products OK', JSON.stringify(d));
+  } catch (e) {
+    log('Recommended Products ERR', JSON.stringify(e));
+  }
+};
+
+// Average Rating
+const getAvgRatingBtn = document.getElementById('getAvgRatingBtn');
+getAvgRatingBtn.onclick = async () => {
+  try {
+    const productId = document.getElementById('avgRatingProdId').value;
+    const d = await api(`/api/products/${productId}/average-rating`);
+    document.getElementById('avgRatingResult').textContent = `Average Rating: ${d.average}`;
+    log('Average Rating OK', JSON.stringify(d));
+  } catch (e) {
+    log('Average Rating ERR', JSON.stringify(e));
+  }
+};
+
+// Admin: Manage Users
+const getAllUsersBtn = document.getElementById('getAllUsersBtn');
+getAllUsersBtn.onclick = async () => {
+  try {
+    const d = await api('/api/users');
+    document.getElementById('usersList').textContent = JSON.stringify(d, null, 2);
+    log('Get All Users OK', JSON.stringify(d));
+  } catch (e) {
+    log('Get All Users ERR', JSON.stringify(e));
+  }
+};
+
+// Helper to render products
+function renderProducts(items, containerId) {
+  const container = document.getElementById(containerId);
+  container.innerHTML = '';
+  for (const p of items) {
+    const card = document.createElement('div');
+    card.className = 'prod';
+    const url = p.imageUrl ? base() + p.imageUrl : '';
+    card.innerHTML = `
+      ${url ? `<img src="${url}" alt="">` : '<div style="height:140px;display:flex;align-items:center;justify-content:center;color:#9fb0c3">no image</div>'}
+      <div class="p">
+        <div><strong>${p.name || ''}</strong> <span class="small">#${p.id}</span></div>
+        <div class="small">${p.description || ''}</div>
+        <div class="small">₪${p.price} | stock: ${p.stock}</div>
+      </div>`;
+    container.appendChild(card);
+  }
+}
+</script>
 </body>
 </html>

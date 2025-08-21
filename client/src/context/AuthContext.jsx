@@ -1,40 +1,37 @@
-import React, { createContext, useContext, useReducer, useEffect } from 'react';
-import { authService } from '../services/authService';
+import React, { createContext, useContext, useReducer, useEffect } from 'react'
 
-// Initial state
-const initialState = {
-  user: null,
-  token: null,
-  isAuthenticated: false,
-  isLoading: true,
-  error: null,
-};
-
-// Action types
+// Types d'actions pour le reducer
 const AUTH_ACTIONS = {
   LOGIN_START: 'LOGIN_START',
   LOGIN_SUCCESS: 'LOGIN_SUCCESS',
-  LOGIN_FAILURE: 'LOGIN_FAILURE',
+  LOGIN_ERROR: 'LOGIN_ERROR',
+  LOGOUT: 'LOGOUT',
   REGISTER_START: 'REGISTER_START',
   REGISTER_SUCCESS: 'REGISTER_SUCCESS',
-  REGISTER_FAILURE: 'REGISTER_FAILURE',
-  LOGOUT: 'LOGOUT',
-  CLEAR_ERROR: 'CLEAR_ERROR',
-  SET_LOADING: 'SET_LOADING',
-  UPDATE_USER: 'UPDATE_USER',
-};
+  REGISTER_ERROR: 'REGISTER_ERROR',
+  CLEAR_ERROR: 'CLEAR_ERROR'
+}
 
-// Reducer function
-const authReducer = (state, action) => {
+// État initial
+const initialState = {
+  user: null,
+  token: localStorage.getItem('token'),
+  isAuthenticated: false,
+  isLoading: false,
+  error: null
+}
+
+// Reducer pour gérer les états d'auth
+function authReducer(state, action) {
   switch (action.type) {
     case AUTH_ACTIONS.LOGIN_START:
     case AUTH_ACTIONS.REGISTER_START:
       return {
         ...state,
         isLoading: true,
-        error: null,
-      };
-    
+        error: null
+      }
+
     case AUTH_ACTIONS.LOGIN_SUCCESS:
     case AUTH_ACTIONS.REGISTER_SUCCESS:
       return {
@@ -43,20 +40,20 @@ const authReducer = (state, action) => {
         token: action.payload.token,
         isAuthenticated: true,
         isLoading: false,
-        error: null,
-      };
-    
-    case AUTH_ACTIONS.LOGIN_FAILURE:
-    case AUTH_ACTIONS.REGISTER_FAILURE:
+        error: null
+      }
+
+    case AUTH_ACTIONS.LOGIN_ERROR:
+    case AUTH_ACTIONS.REGISTER_ERROR:
       return {
         ...state,
         user: null,
         token: null,
         isAuthenticated: false,
         isLoading: false,
-        error: action.payload,
-      };
-    
+        error: action.payload
+      }
+
     case AUTH_ACTIONS.LOGOUT:
       return {
         ...state,
@@ -64,177 +61,198 @@ const authReducer = (state, action) => {
         token: null,
         isAuthenticated: false,
         isLoading: false,
-        error: null,
-      };
-    
+        error: null
+      }
+
     case AUTH_ACTIONS.CLEAR_ERROR:
       return {
         ...state,
-        error: null,
-      };
-    
-    case AUTH_ACTIONS.SET_LOADING:
-      return {
-        ...state,
-        isLoading: action.payload,
-      };
-    
-    case AUTH_ACTIONS.UPDATE_USER:
-      return {
-        ...state,
-        user: { ...state.user, ...action.payload },
-      };
-    
+        error: null
+      }
+
     default:
-      return state;
+      return state
   }
-};
+}
 
-// Create context
-const AuthContext = createContext();
+// Création du Context
+const AuthContext = createContext()
 
-// Auth provider component
-export const AuthProvider = ({ children }) => {
-  const [state, dispatch] = useReducer(authReducer, initialState);
+// Provider component
+export function AuthProvider({ children }) {
+  const [state, dispatch] = useReducer(authReducer, initialState)
 
-  // Check for existing token on mount
+  // Vérifier le token au chargement de l'app
   useEffect(() => {
-    const checkAuthState = () => {
-      const token = localStorage.getItem('token');
-      const user = localStorage.getItem('user');
-      
-      if (token && user) {
-        try {
-          const parsedUser = JSON.parse(user);
+    const token = localStorage.getItem('token')
+    if (token) {
+      // Décoder le token pour récupérer les infos utilisateur
+      try {
+        const payload = JSON.parse(atob(token.split('.')[1]))
+        
+        // Vérifier si le token n'est pas expiré
+        if (payload.exp * 1000 > Date.now()) {
           dispatch({
             type: AUTH_ACTIONS.LOGIN_SUCCESS,
-            payload: { token, user: parsedUser },
-          });
-        } catch (error) {
-          // Invalid user data, clear storage
-          localStorage.removeItem('token');
-          localStorage.removeItem('user');
+            payload: {
+              token,
+              user: {
+                id: payload.id,
+                email: payload.email,
+                role: payload.role
+              }
+            }
+          })
+        } else {
+          // Token expiré, le supprimer
+          localStorage.removeItem('token')
         }
+      } catch (error) {
+        // Token invalide, le supprimer
+        localStorage.removeItem('token')
       }
-      
-      dispatch({ type: AUTH_ACTIONS.SET_LOADING, payload: false });
-    };
+    }
+  }, [])
 
-    checkAuthState();
-  }, []);
-
-  // Login function
+  // Fonction de login
   const login = async (email, password) => {
-    dispatch({ type: AUTH_ACTIONS.LOGIN_START });
-    
+    dispatch({ type: AUTH_ACTIONS.LOGIN_START })
+
     try {
-      const response = await authService.login(email, password);
-      const { token, user } = response.data;
-      
-      // Store in localStorage
-      localStorage.setItem('token', token);
-      localStorage.setItem('user', JSON.stringify(user));
-      
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ email, password })
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Erreur de connexion')
+      }
+
+      // Stocker le token dans localStorage
+      localStorage.setItem('token', data.token)
+
+      // Décoder le token pour récupérer les infos utilisateur
+      const payload = JSON.parse(atob(data.token.split('.')[1]))
+
       dispatch({
         type: AUTH_ACTIONS.LOGIN_SUCCESS,
-        payload: { token, user },
-      });
-      
-      return { success: true };
-    } catch (error) {
-      const errorMessage = error.response?.data?.message || 'Login failed';
-      dispatch({
-        type: AUTH_ACTIONS.LOGIN_FAILURE,
-        payload: errorMessage,
-      });
-      return { success: false, error: errorMessage };
-    }
-  };
+        payload: {
+          token: data.token,
+          user: {
+            id: payload.id,
+            email: payload.email,
+            role: payload.role
+          }
+        }
+      })
 
-  // Register function
-  const register = async (userData) => {
-    dispatch({ type: AUTH_ACTIONS.REGISTER_START });
-    
+      return { success: true }
+    } catch (error) {
+      dispatch({
+        type: AUTH_ACTIONS.LOGIN_ERROR,
+        payload: error.message
+      })
+      return { success: false, error: error.message }
+    }
+  }
+
+  // Fonction de register
+  const register = async (name, email, password, role = 'user') => {
+    dispatch({ type: AUTH_ACTIONS.REGISTER_START })
+
     try {
-      const response = await authService.register(userData);
-      const { token, user } = response.data;
-      
-      // Store in localStorage
-      localStorage.setItem('token', token);
-      if (user) {
-        localStorage.setItem('user', JSON.stringify(user));
+      const response = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ name, email, password, role })
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Erreur lors de l\'inscription')
       }
-      
+
+      // Stocker le token dans localStorage
+      localStorage.setItem('token', data.token)
+
+      // Décoder le token pour récupérer les infos utilisateur
+      const payload = JSON.parse(atob(data.token.split('.')[1]))
+
       dispatch({
         type: AUTH_ACTIONS.REGISTER_SUCCESS,
-        payload: { token, user },
-      });
-      
-      return { success: true };
+        payload: {
+          token: data.token,
+          user: {
+            id: payload.id,
+            email: payload.email,
+            role: payload.role
+          }
+        }
+      })
+
+      return { success: true }
     } catch (error) {
-      const errorMessage = error.response?.data?.message || 'Registration failed';
       dispatch({
-        type: AUTH_ACTIONS.REGISTER_FAILURE,
-        payload: errorMessage,
-      });
-      return { success: false, error: errorMessage };
+        type: AUTH_ACTIONS.REGISTER_ERROR,
+        payload: error.message
+      })
+      return { success: false, error: error.message }
     }
-  };
+  }
 
-  // Logout function
+  // Fonction de logout
   const logout = () => {
-    // Clear localStorage
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    
-    dispatch({ type: AUTH_ACTIONS.LOGOUT });
-  };
+    localStorage.removeItem('token')
+    dispatch({ type: AUTH_ACTIONS.LOGOUT })
+  }
 
-  // Clear error function
+  // Fonction pour clear les erreurs
   const clearError = () => {
-    dispatch({ type: AUTH_ACTIONS.CLEAR_ERROR });
-  };
+    dispatch({ type: AUTH_ACTIONS.CLEAR_ERROR })
+  }
 
-  // Update user function
-  const updateUser = (userData) => {
-    const updatedUser = { ...state.user, ...userData };
-    localStorage.setItem('user', JSON.stringify(updatedUser));
-    dispatch({
-      type: AUTH_ACTIONS.UPDATE_USER,
-      payload: userData,
-    });
-  };
-
-  // Check if user is admin
+  // Fonctions utilitaires pour vérifier les rôles
   const isAdmin = () => {
-    return state.user?.role === 'admin';
-  };
+    return state.user?.role === 'admin'
+  }
 
-  // Context value
+  const isUser = () => {
+    return state.user?.role === 'user'
+  }
+
+  // Valeurs du context
   const value = {
     ...state,
     login,
     register,
     logout,
     clearError,
-    updateUser,
     isAdmin,
-  };
+    isUser
+  }
 
   return (
     <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
-  );
-};
+  )
+}
 
-// Custom hook to use auth context
-export const useAuth = () => {
-  const context = useContext(AuthContext);
+// Hook personnalisé pour utiliser le context
+export function useAuth() {
+  const context = useContext(AuthContext)
   if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error('useAuth must be used within an AuthProvider')
   }
-  return context;
-};
+  return context
+}
 
-export default AuthContext;
+export default AuthContext

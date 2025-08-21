@@ -1,55 +1,49 @@
-import { get, post, put, del } from './api';
+import { get, post, put, del } from './api.js'
 
-export const cartService = {
-  // Get user's cart
-  getCart: async () => {
-    const response = await get('/cart');
-    return response;
-  },
+// Get current cart
+export const getCart = async () => {
+  return await get('/cart')
+}
 
-  // Add item to cart
-  addToCart: async (cartData) => {
-    const response = await post('/cart', cartData);
-    return response;
-  },
+// Add item to cart
+export const addToCart = async (productId, quantity = 1) => {
+  return await post('/cart', { product_id: productId, quantity })
+}
 
-  // Update cart item quantity
-  updateCartItem: async (itemId, updateData) => {
-    const response = await put(`/cart/${itemId}`, updateData);
-    return response;
-  },
+// Update cart item quantity
+export const updateCartItem = async (itemId, quantity) => {
+  return await put(`/cart/${itemId}`, { quantity })
+}
 
-  // Remove item from cart
-  removeFromCart: async (itemId) => {
-    const response = await del(`/cart/${itemId}`);
-    return response;
-  },
+// Remove item from cart
+export const removeCartItem = async (itemId) => {
+  return await del(`/cart/${itemId}`)
+}
 
-  // Clear entire cart (usually called after order creation)
-  clearCart: async () => {
-    // Since your backend clears cart after order creation,
-    // this might not be needed as a separate endpoint
-    // But we can implement it for completeness
-    const cart = await cartService.getCart();
-    const promises = cart.data.map(item => 
-      cartService.removeFromCart(item.id)
-    );
-    await Promise.all(promises);
-  },
+// Calculate cart totals
+export const calculateCartTotals = (cartData) => {
+  const items = cartData.items || []
+  
+  const totalItems = items.reduce((total, item) => total + (item.quantity || 0), 0)
+  const totalPrice = items.reduce((total, item) => {
+    const price = item.productPrice || 0
+    const quantity = item.quantity || 0
+    return total + (price * quantity)
+  }, 0)
 
-  // Get cart summary (totals)
-  getCartSummary: async () => {
-    const response = await cartService.getCart();
-    const items = response.data;
-    
-    const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
-    const totalPrice = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-    
-    return {
-      items,
-      totalItems,
-      totalPrice,
-      itemCount: items.length
-    };
+  return {
+    items,
+    totalItems,
+    totalPrice,
+    formattedTotal: formatPrice(totalPrice)
   }
-};
+}
+
+// Format price
+export const formatPrice = (price) => {
+  if (price === undefined || price === null) return 'N/A'
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD'
+  }).format(price)
+}

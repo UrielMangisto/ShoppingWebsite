@@ -1,139 +1,125 @@
-import React from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
-import { useAuth } from './context/AuthContext';
+import React from 'react'
+import { Routes, Route } from 'react-router-dom'
+import { AuthProvider } from './context/AuthContext'
+import { CartProvider } from './context/CartContext'
 
-// Layout Components
-import Header from './components/common/Header';
-import Footer from './components/common/Footer';
-import Loading from './components/common/Loading';
+// Layout components
+import Header from './components/common/Header/Header'
+import Footer from './components/common/Footer/Footer'
+import ProtectedRoute from './components/common/ProtectedRoute/ProtectedRoute'
 
-// Page Components
-import Home from './pages/Home';
-import Login from './pages/Login';
-import Register from './pages/Register';
-import Products from './pages/Products';
-import ProductDetail from './pages/ProductDetail';
-import Cart from './pages/Cart';
-import Checkout from './pages/Checkout';
-import Orders from './pages/Orders';
-import Profile from './pages/Profile';
-import AdminPanel from './pages/AdminPanel';
-import ForgotPassword from './pages/ForgotPassword';
-import ResetPassword from './pages/ResetPassword';
-import NotFound from './pages/NotFound';
+// Public pages
+import HomePage from './pages/HomePage/HomePage'
+import ProductsPage from './pages/ProductsPage/ProductsPage'
+import ProductDetailPage from './pages/ProductDetailPage/ProductDetailPage'
+import SearchResultsPage from './pages/SearchResultsPage/SearchResultsPage'
+import CategoryPage from './pages/CategoryPage/CategoryPage'
 
-// Styles
-import './App.css';
+// Auth pages
+import LoginPage from './pages/auth/LoginPage/LoginPage'
+import RegisterPage from './pages/auth/RegisterPage/RegisterPage'
+import ResetPasswordPage from './pages/auth/ResetPasswordPage/ResetPasswordPage'
 
-// Protected Route Component
-const ProtectedRoute = ({ children, adminOnly = false }) => {
-  const { isAuthenticated, isAdmin, isLoading } = useAuth();
+// User pages (protected)
+import CartPage from './pages/CartPage/CartPage'
+import CheckoutPage from './pages/CheckoutPage/CheckoutPage'
+import OrdersPage from './pages/orders/OrdersPage/OrdersPage'
+import OrderDetailPage from './pages/orders/OrderDetailPage/OrderDetailPage'
 
-  if (isLoading) {
-    return <Loading />;
-  }
+// Admin pages (admin only)
+import AdminDashboard from './pages/admin/AdminDashboard/AdminDashboard'
+import AdminUsers from './pages/admin/AdminUsers/AdminUsers'
+import AdminOrders from './pages/admin/AdminOrders/AdminOrders'
+import AdminProducts from './pages/admin/AdminProducts/AdminProducts'
+import AdminCategories from './pages/admin/AdminCategories/AdminCategories'
 
-  if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
-  }
-
-  if (adminOnly && !isAdmin()) {
-    return <Navigate to="/" replace />;
-  }
-
-  return children;
-};
-
-// Public Route Component (redirect to home if already authenticated)
-const PublicRoute = ({ children }) => {
-  const { isAuthenticated, isLoading } = useAuth();
-
-  if (isLoading) {
-    return <Loading />;
-  }
-
-  if (isAuthenticated) {
-    return <Navigate to="/" replace />;
-  }
-
-  return children;
-};
+import './App.css'
 
 function App() {
-  const { isLoading } = useAuth();
-
-  if (isLoading) {
-    return <Loading />;
-  }
-
   return (
-    <div className="App">
-      <Header />
-      <main className="main-content">
-        <Routes>
-          {/* Public Routes */}
-          <Route path="/" element={<Home />} />
-          <Route path="/products" element={<Products />} />
-          <Route path="/products/:id" element={<ProductDetail />} />
+    <AuthProvider>
+      <CartProvider>
+        <div className="app">
+          <Header />
           
-          {/* Auth Routes (only accessible when not logged in) */}
-          <Route path="/login" element={
-            <PublicRoute>
-              <Login />
-            </PublicRoute>
-          } />
-          <Route path="/register" element={
-            <PublicRoute>
-              <Register />
-            </PublicRoute>
-          } />
-          <Route path="/forgot-password" element={
-            <PublicRoute>
-              <ForgotPassword />
-            </PublicRoute>
-          } />
-          <Route path="/reset-password/:token" element={
-            <PublicRoute>
-              <ResetPassword />
-            </PublicRoute>
-          } />
-
-          {/* Protected Routes (require authentication) */}
-          <Route path="/cart" element={
-            <ProtectedRoute>
-              <Cart />
-            </ProtectedRoute>
-          } />
-          <Route path="/checkout" element={
-            <ProtectedRoute>
-              <Checkout />
-            </ProtectedRoute>
-          } />
-          <Route path="/orders" element={
-            <ProtectedRoute>
-              <Orders />
-            </ProtectedRoute>
-          } />
-          <Route path="/profile" element={
-            <ProtectedRoute>
-              <Profile />
-            </ProtectedRoute>
-          } />
-
-          {/* Admin Routes (require admin role) */}
-          <Route path="/admin" element={
-            <ProtectedRoute adminOnly={true}>
-              <AdminPanel />
-            </ProtectedRoute>
-          } />
-
-          {/* 404 Route */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </main>
-      <Footer />
-    </div>
-  );
+          <main className="main">
+            <Routes>
+              {/* Routes publiques */}
+              <Route path="/" element={<HomePage />} />
+              <Route path="/products" element={<ProductsPage />} />
+              <Route path="/products/:id" element={<ProductDetailPage />} />
+              <Route path="/search" element={<SearchResultsPage />} />
+              <Route path="/category/:categoryId" element={<CategoryPage />} />
+              
+              {/* Routes d'authentification */}
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/register" element={<RegisterPage />} />
+              <Route path="/reset-password" element={<ResetPasswordPage />} />
+              
+              {/* Routes protégées (utilisateur connecté) */}
+              <Route path="/cart" element={
+                <ProtectedRoute>
+                  <CartPage />
+                </ProtectedRoute>
+              } />
+              <Route path="/checkout" element={
+                <ProtectedRoute>
+                  <CheckoutPage />
+                </ProtectedRoute>
+              } />
+              <Route path="/orders" element={
+                <ProtectedRoute>
+                  <OrdersPage />
+                </ProtectedRoute>
+              } />
+              <Route path="/orders/:id" element={
+                <ProtectedRoute>
+                  <OrderDetailPage />
+                </ProtectedRoute>
+              } />
+              
+              {/* Routes admin (admin seulement) */}
+              <Route path="/admin" element={
+                <ProtectedRoute requireAdmin>
+                  <AdminDashboard />
+                </ProtectedRoute>
+              } />
+              <Route path="/admin/users" element={
+                <ProtectedRoute requireAdmin>
+                  <AdminUsers />
+                </ProtectedRoute>
+              } />
+              <Route path="/admin/orders" element={
+                <ProtectedRoute requireAdmin>
+                  <AdminOrders />
+                </ProtectedRoute>
+              } />
+              <Route path="/admin/products" element={
+                <ProtectedRoute requireAdmin>
+                  <AdminProducts />
+                </ProtectedRoute>
+              } />
+              <Route path="/admin/categories" element={
+                <ProtectedRoute requireAdmin>
+                  <AdminCategories />
+                </ProtectedRoute>
+              } />
+              
+              {/* Route 404 */}
+              <Route path="*" element={
+                <div className="not-found">
+                  <h1>404 - Not Found</h1>
+                  <p>The page you are looking for does not exist.</p>
+                </div>
+              } />
+            </Routes>
+          </main>
+          
+          <Footer />
+        </div>
+      </CartProvider>
+    </AuthProvider>
+  )
 }
 
-export default App;
+export default App

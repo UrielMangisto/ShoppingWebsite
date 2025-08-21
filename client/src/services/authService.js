@@ -1,71 +1,72 @@
-import { postNoAuth } from './api';
+import { post } from './api.js'
 
-export const authService = {
-  // Register new user
-  register: async (userData) => {
-    const response = await postNoAuth('/auth/register', userData);
-    return response;
-  },
-
-  // Login user
-  login: async (email, password) => {
-    const response = await postNoAuth('/auth/login', { email, password });
-    return response;
-  },
-
-  // Logout user (clear local storage is handled in AuthContext)
-  logout: () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-  },
-
-  // Get current user from token
-  getCurrentUser: () => {
-    const user = localStorage.getItem('user');
-    return user ? JSON.parse(user) : null;
-  },
-
-  // Get current token
-  getToken: () => {
-    return localStorage.getItem('token');
-  },
-
-  // Check if user is authenticated
-  isAuthenticated: () => {
-    const token = localStorage.getItem('token');
-    return !!token;
-  },
-
-  // Check if user is admin
-  isAdmin: () => {
-    const user = authService.getCurrentUser();
-    return user?.role === 'admin';
-  },
-
-  // Request password reset
-  requestPasswordReset: async (email) => {
-    const response = await postNoAuth('/auth/forgot-password', { email });
-    return response;
-  },
-
-  // Reset password with token
-  resetPassword: async (token, newPassword) => {
-    const response = await postNoAuth('/auth/reset-password', {
-      token,
-      password: newPassword
-    });
-    return response;
-  },
-
-  // Verify email with token
-  verifyEmail: async (token) => {
-    const response = await postNoAuth('/auth/verify-email', { token });
-    return response;
-  },
-
-  // Resend verification email
-  resendVerification: async (email) => {
-    const response = await postNoAuth('/auth/resend-verification', { email });
-    return response;
+// Auth endpoints
+export const login = async (email, password) => {
+  const response = await post('/auth/login', { email, password })
+  
+  if (response.token) {
+    localStorage.setItem('token', response.token)
   }
-};
+  
+  return response
+}
+
+export const register = async (name, email, password, role = 'user') => {
+  const response = await post('/auth/register', { name, email, password, role })
+  
+  if (response.token) {
+    localStorage.setItem('token', response.token)
+  }
+  
+  return response
+}
+
+export const resetPassword = async (email, newPassword) => {
+  return await post('/auth/reset-password', { email, newPassword })
+}
+
+export const logout = () => {
+  localStorage.removeItem('token')
+  window.location.href = '/login'
+}
+
+// Token utilities
+export const getToken = () => localStorage.getItem('token')
+
+export const isAuthenticated = () => {
+  const token = getToken()
+  if (!token) return false
+  
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]))
+    return payload.exp * 1000 > Date.now()
+  } catch {
+    return false
+  }
+}
+
+export const getCurrentUser = () => {
+  const token = getToken()
+  if (!token) return null
+  
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]))
+    return {
+      id: payload.id,
+      email: payload.email,
+      role: payload.role
+    }
+  } catch {
+    return null
+  }
+}
+
+export const isAdmin = () => {
+  const user = getCurrentUser()
+  return user?.role === 'admin'
+}
+
+export const isUser = () => {
+  const user = getCurrentUser()
+  return user?.role === 'user'
+}

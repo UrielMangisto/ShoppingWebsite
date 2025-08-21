@@ -1,88 +1,62 @@
-import { get, post, put } from './api';
+import { get, post } from './api.js'
 
-export const orderService = {
-  // Create new order
-  createOrder: async (orderData = {}) => {
-    // Since your backend creates order from cart items,
-    // we might not need to send order data
-    const response = await post('/orders', orderData);
-    return response;
-  },
+// Create order from cart
+export const createOrder = async () => {
+  return await post('/orders')
+}
 
-  // Get user's orders
-  getMyOrders: async () => {
-    const response = await get('/orders');
-    return response;
-  },
+// Get user's orders
+export const getMyOrders = async () => {
+  return await get('/orders')
+}
 
-  // Get single order by ID
-  getOrderById: async (orderId) => {
-    const response = await get(`/orders/${orderId}`);
-    return response;
-  },
+// Get order details
+export const getOrder = async (id) => {
+  return await get(`/orders/${id}`)
+}
 
-  // Get all orders (admin only)
-  getAllOrders: async () => {
-    const response = await get('/orders/all/admin');
-    return response;
-  },
+// Get all orders (admin only)
+export const getAllOrders = async () => {
+  return await get('/orders/all/admin')
+}
 
-  // Update order status (admin only) - if you add this feature
-  updateOrderStatus: async (orderId, status) => {
-    const response = await put(`/orders/${orderId}/status`, { status });
-    return response;
-  },
-
-  // Cancel order (if you add this feature)
-  cancelOrder: async (orderId) => {
-    const response = await put(`/orders/${orderId}/cancel`);
-    return response;
-  },
-
-  // Get order statistics (admin only) - if you add this feature
-  getOrderStats: async () => {
-    const response = await get('/orders/stats');
-    return response;
-  },
-
-  // Get order by status (admin only)
-  getOrdersByStatus: async (status) => {
-    const response = await get(`/orders?status=${status}`);
-    return response;
-  },
-
-  // Calculate order total
-  calculateOrderTotal: (orderItems) => {
-    if (!orderItems || !Array.isArray(orderItems)) return 0;
-    
-    return orderItems.reduce((total, item) => {
-      return total + (item.price * item.quantity);
-    }, 0);
-  },
-
-  // Format order date
-  formatOrderDate: (dateString) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
+// Format order date
+export const formatDate = (dateString) => {
+  if (!dateString) return 'N/A'
+  
+  try {
+    return new Intl.DateTimeFormat('en-US', {
       year: 'numeric',
       month: 'long',
       day: 'numeric',
       hour: '2-digit',
       minute: '2-digit'
-    });
-  },
-
-  // Get order status color for UI
-  getOrderStatusColor: (status) => {
-    const statusColors = {
-      'pending': 'orange',
-      'processing': 'blue',
-      'shipped': 'purple',
-      'delivered': 'green',
-      'cancelled': 'red',
-      'refunded': 'gray'
-    };
-    
-    return statusColors[status?.toLowerCase()] || 'gray';
+    }).format(new Date(dateString))
+  } catch {
+    return 'Invalid date'
   }
-};
+}
+
+// Format price
+export const formatPrice = (price) => {
+  if (price === undefined || price === null) return 'N/A'
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD'
+  }).format(price)
+}
+
+// Get order status (simulated based on age)
+export const getOrderStatus = (order) => {
+  if (!order) return 'unknown'
+  
+  const now = new Date()
+  const orderDate = new Date(order.created_at)
+  const daysDiff = Math.floor((now - orderDate) / (1000 * 60 * 60 * 24))
+
+  if (daysDiff === 0) return 'processing'
+  if (daysDiff <= 1) return 'confirmed'
+  if (daysDiff <= 3) return 'shipped'
+  if (daysDiff <= 7) return 'delivered'
+  return 'completed'
+}

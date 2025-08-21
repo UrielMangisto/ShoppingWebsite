@@ -1,0 +1,11 @@
+.order-detail-page {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+@media (max-width: 768px) {
+  .order-detail-page {
+    padding: 1rem;
+  }
+}

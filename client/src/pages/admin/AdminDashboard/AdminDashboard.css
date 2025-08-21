@@ -1,0 +1,75 @@
+.admin-layout {
+  display: flex;
+  min-height: 100vh;
+}
+
+.admin-dashboard {
+  flex: 1;
+  padding: 2rem;
+  margin-left: 250px;
+  background-color: #f8f9fa;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 2rem;
+  margin-bottom: 3rem;
+}
+
+.stat-card {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.stat-card h3 {
+  margin: 0;
+  color: #666;
+  font-size: 1rem;
+}
+
+.stat-card p {
+  margin: 0.5rem 0 0;
+  font-size: 2rem;
+  font-weight: 600;
+  color: #2c3e50;
+}
+
+.recent-orders {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.recent-orders table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+}
+
+.recent-orders th,
+.recent-orders td {
+  padding: 1rem;
+  text-align: left;
+  border-bottom: 1px solid #eee;
+}
+
+.recent-orders th {
+  font-weight: 600;
+  color: #666;
+}
+
+@media (max-width: 768px) {
+  .admin-dashboard {
+    margin-left: 0;
+    padding: 1rem;
+  }
+
+  .stats-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+}

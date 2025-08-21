@@ -1,0 +1,30 @@
+.category-page {
+  display: grid;
+  grid-template-columns: 250px 1fr;
+  gap: 2rem;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+.category-sidebar {
+  position: sticky;
+  top: 2rem;
+  height: fit-content;
+}
+
+.category-content {
+  min-height: 100vh;
+}
+
+.category-content h1 {
+  margin-bottom: 2rem;
+  color: #2c3e50;
+}
+
+@media (max-width: 768px) {
+  .category-page {
+    grid-template-columns: 1fr;
+    padding: 1rem;
+  }
+}

@@ -1,0 +1,22 @@
+.review-list {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+.review-list h3 {
+  margin-bottom: 1.5rem;
+  color: #333;
+}
+
+.reviews-container {
+  margin-top: 2rem;
+}
+
+.no-reviews {
+  text-align: center;
+  padding: 2rem;
+  color: #666;
+  background: #f8f9fa;
+  border-radius: 8px;
+}

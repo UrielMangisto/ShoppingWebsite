@@ -1,557 +1,314 @@
-// Validation utility functions
+import { VALIDATION_RULES, IMAGE_CONFIG, RATING } from './constants'
 
-/**
- * Validate email format
- */
+// Email validation
 export const validateEmail = (email) => {
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  return {
-    isValid: emailRegex.test(email),
-    message: 'Please enter a valid email address'
-  };
-};
-
-/**
- * Validate password strength
- */
-export const validatePassword = (password, minLength = 6) => {
-  const errors = [];
+  if (!email) {
+    return { isValid: false, error: 'Email is required' }
+  }
   
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+  
+  if (!emailRegex.test(email)) {
+    return { isValid: false, error: 'Please enter a valid email address' }
+  }
+  
+  return { isValid: true }
+}
+
+// Password validation
+export const validatePassword = (password) => {
   if (!password) {
-    return {
-      isValid: false,
-      message: 'Password is required',
-      errors: ['Password is required']
-    };
+    return { isValid: false, error: 'Password is required' }
   }
   
-  if (password.length < minLength) {
-    errors.push(`Password must be at least ${minLength} characters long`);
+  if (password.length < VALIDATION_RULES.PASSWORD_MIN_LENGTH) {
+    return { 
+      isValid: false, 
+      error: `Password must be at least ${VALIDATION_RULES.PASSWORD_MIN_LENGTH} characters long` 
+    }
   }
   
-  if (!/[A-Z]/.test(password)) {
-    errors.push('Password must contain at least one uppercase letter');
-  }
-  
-  if (!/[a-z]/.test(password)) {
-    errors.push('Password must contain at least one lowercase letter');
-  }
-  
-  if (!/\d/.test(password)) {
-    errors.push('Password must contain at least one number');
-  }
-  
-  if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
-    errors.push('Password must contain at least one special character');
-  }
-  
-  return {
-    isValid: errors.length === 0,
-    message: errors[0] || 'Password is valid',
-    errors
-  };
-};
+  return { isValid: true }
+}
 
-/**
- * Simple password validation (less strict)
- */
-export const validateSimplePassword = (password, minLength = 6) => {
-  if (!password) {
-    return {
-      isValid: false,
-      message: 'Password is required'
-    };
-  }
-  
-  if (password.length < minLength) {
-    return {
-      isValid: false,
-      message: `Password must be at least ${minLength} characters long`
-    };
-  }
-  
-  return {
-    isValid: true,
-    message: 'Password is valid'
-  };
-};
-
-/**
- * Validate password confirmation
- */
-export const validatePasswordConfirmation = (password, confirmPassword) => {
-  if (!confirmPassword) {
-    return {
-      isValid: false,
-      message: 'Please confirm your password'
-    };
-  }
-  
-  if (password !== confirmPassword) {
-    return {
-      isValid: false,
-      message: 'Passwords do not match'
-    };
-  }
-  
-  return {
-    isValid: true,
-    message: 'Passwords match'
-  };
-};
-
-/**
- * Validate name
- */
-export const validateName = (name, minLength = 2) => {
+// Name validation
+export const validateName = (name) => {
   if (!name || !name.trim()) {
-    return {
-      isValid: false,
-      message: 'Name is required'
-    };
+    return { isValid: false, error: 'Name is required' }
   }
   
-  if (name.trim().length < minLength) {
-    return {
-      isValid: false,
-      message: `Name must be at least ${minLength} characters long`
-    };
-  }
+  const trimmedName = name.trim()
   
-  if (!/^[a-zA-Z\s'-]+$/.test(name)) {
-    return {
-      isValid: false,
-      message: 'Name can only contain letters, spaces, hyphens, and apostrophes'
-    };
-  }
-  
-  return {
-    isValid: true,
-    message: 'Name is valid'
-  };
-};
-
-/**
- * Validate phone number
- */
-export const validatePhone = (phone) => {
-  // Remove all non-digit characters
-  const cleanPhone = phone.replace(/\D/g, '');
-  
-  if (!cleanPhone) {
-    return {
-      isValid: false,
-      message: 'Phone number is required'
-    };
-  }
-  
-  if (cleanPhone.length < 10) {
-    return {
-      isValid: false,
-      message: 'Phone number must be at least 10 digits'
-    };
-  }
-  
-  if (cleanPhone.length > 15) {
-    return {
-      isValid: false,
-      message: 'Phone number cannot exceed 15 digits'
-    };
-  }
-  
-  return {
-    isValid: true,
-    message: 'Phone number is valid'
-  };
-};
-
-/**
- * Validate address
- */
-export const validateAddress = (address) => {
-  if (!address || !address.trim()) {
-    return {
-      isValid: false,
-      message: 'Address is required'
-    };
-  }
-  
-  if (address.trim().length < 5) {
-    return {
-      isValid: false,
-      message: 'Address must be at least 5 characters long'
-    };
-  }
-  
-  return {
-    isValid: true,
-    message: 'Address is valid'
-  };
-};
-
-/**
- * Validate postal code
- */
-export const validatePostalCode = (postalCode, country = 'US') => {
-  if (!postalCode || !postalCode.trim()) {
-    return {
-      isValid: false,
-      message: 'Postal code is required'
-    };
-  }
-  
-  const patterns = {
-    US: /^\d{5}(-\d{4})?$/,
-    CA: /^[A-Za-z]\d[A-Za-z] \d[A-Za-z]\d$/,
-    UK: /^[A-Za-z]{1,2}\d[A-Za-z\d]? \d[A-Za-z]{2}$/,
-    FR: /^\d{5}$/,
-    DE: /^\d{5}$/
-  };
-  
-  const pattern = patterns[country] || patterns.US;
-  
-  if (!pattern.test(postalCode.trim())) {
-    return {
-      isValid: false,
-      message: 'Please enter a valid postal code'
-    };
-  }
-  
-  return {
-    isValid: true,
-    message: 'Postal code is valid'
-  };
-};
-
-/**
- * Validate credit card number
- */
-export const validateCreditCard = (cardNumber) => {
-  // Remove all non-digit characters
-  const cleanNumber = cardNumber.replace(/\D/g, '');
-  
-  if (!cleanNumber) {
-    return {
-      isValid: false,
-      message: 'Credit card number is required'
-    };
-  }
-  
-  if (cleanNumber.length < 13 || cleanNumber.length > 19) {
-    return {
-      isValid: false,
-      message: 'Credit card number must be between 13 and 19 digits'
-    };
-  }
-  
-  // Luhn algorithm check
-  let sum = 0;
-  let isEven = false;
-  
-  for (let i = cleanNumber.length - 1; i >= 0; i--) {
-    let digit = parseInt(cleanNumber.charAt(i));
-    
-    if (isEven) {
-      digit *= 2;
-      if (digit > 9) {
-        digit -= 9;
-      }
+  if (trimmedName.length < VALIDATION_RULES.NAME_MIN_LENGTH) {
+    return { 
+      isValid: false, 
+      error: `Name must be at least ${VALIDATION_RULES.NAME_MIN_LENGTH} characters long` 
     }
-    
-    sum += digit;
-    isEven = !isEven;
   }
   
-  if (sum % 10 !== 0) {
-    return {
-      isValid: false,
-      message: 'Please enter a valid credit card number'
-    };
+  if (trimmedName.length > VALIDATION_RULES.NAME_MAX_LENGTH) {
+    return { 
+      isValid: false, 
+      error: `Name must be less than ${VALIDATION_RULES.NAME_MAX_LENGTH} characters` 
+    }
   }
   
-  return {
-    isValid: true,
-    message: 'Credit card number is valid'
-  };
-};
+  return { isValid: true }
+}
 
-/**
- * Validate expiry date (MM/YY format)
- */
-export const validateExpiryDate = (expiryDate) => {
-  if (!expiryDate) {
-    return {
-      isValid: false,
-      message: 'Expiry date is required'
-    };
+// Required field validation
+export const validateRequired = (value, fieldName = 'Field') => {
+  if (!value || (typeof value === 'string' && !value.trim())) {
+    return { isValid: false, error: `${fieldName} is required` }
   }
   
-  const match = expiryDate.match(/^(\d{2})\/(\d{2})$/);
-  if (!match) {
-    return {
-      isValid: false,
-      message: 'Expiry date must be in MM/YY format'
-    };
-  }
-  
-  const month = parseInt(match[1]);
-  const year = parseInt(match[2]) + 2000; // Convert YY to YYYY
-  
-  if (month < 1 || month > 12) {
-    return {
-      isValid: false,
-      message: 'Month must be between 01 and 12'
-    };
-  }
-  
-  const now = new Date();
-  const currentYear = now.getFullYear();
-  const currentMonth = now.getMonth() + 1;
-  
-  if (year < currentYear || (year === currentYear && month < currentMonth)) {
-    return {
-      isValid: false,
-      message: 'Card has expired'
-    };
-  }
-  
-  return {
-    isValid: true,
-    message: 'Expiry date is valid'
-  };
-};
+  return { isValid: true }
+}
 
-/**
- * Validate CVV
- */
-export const validateCVV = (cvv) => {
-  if (!cvv) {
-    return {
-      isValid: false,
-      message: 'CVV is required'
-    };
+// Number validation
+export const validateNumber = (value, min = null, max = null, fieldName = 'Value') => {
+  if (value === undefined || value === null || value === '') {
+    return { isValid: false, error: `${fieldName} is required` }
   }
   
-  if (!/^\d{3,4}$/.test(cvv)) {
-    return {
-      isValid: false,
-      message: 'CVV must be 3 or 4 digits'
-    };
+  const numValue = Number(value)
+  
+  if (isNaN(numValue)) {
+    return { isValid: false, error: `${fieldName} must be a valid number` }
   }
   
-  return {
-    isValid: true,
-    message: 'CVV is valid'
-  };
-};
+  if (min !== null && numValue < min) {
+    return { isValid: false, error: `${fieldName} must be at least ${min}` }
+  }
+  
+  if (max !== null && numValue > max) {
+    return { isValid: false, error: `${fieldName} must be at most ${max}` }
+  }
+  
+  return { isValid: true }
+}
 
-/**
- * Validate URL
- */
-export const validateUrl = (url) => {
-  if (!url) {
-    return {
-      isValid: false,
-      message: 'URL is required'
-    };
+// Price validation
+export const validatePrice = (price) => {
+  const numberValidation = validateNumber(price, 0.01, null, 'Price')
+  
+  if (!numberValidation.isValid) {
+    return numberValidation
   }
   
-  try {
-    new URL(url);
-    return {
-      isValid: true,
-      message: 'URL is valid'
-    };
-  } catch {
-    return {
-      isValid: false,
-      message: 'Please enter a valid URL'
-    };
-  }
-};
+  return { isValid: true }
+}
 
-/**
- * Validate price
- */
-export const validatePrice = (price, min = 0, max = 999999) => {
-  const numPrice = parseFloat(price);
-  
-  if (isNaN(numPrice)) {
-    return {
-      isValid: false,
-      message: 'Price must be a valid number'
-    };
+// Stock validation
+export const validateStock = (stock) => {
+  if (stock === undefined || stock === null || stock === '') {
+    return { isValid: true } // Stock is optional
   }
   
-  if (numPrice < min) {
-    return {
-      isValid: false,
-      message: `Price must be at least $${min}`
-    };
-  }
-  
-  if (numPrice > max) {
-    return {
-      isValid: false,
-      message: `Price cannot exceed $${max}`
-    };
-  }
-  
-  return {
-    isValid: true,
-    message: 'Price is valid'
-  };
-};
+  return validateNumber(stock, 0, null, 'Stock')
+}
 
-/**
- * Validate quantity
- */
-export const validateQuantity = (quantity, min = 1, max = 999) => {
-  const numQuantity = parseInt(quantity);
+// Rating validation
+export const validateRating = (rating) => {
+  const numberValidation = validateNumber(rating, RATING.MIN, RATING.MAX, 'Rating')
   
-  if (isNaN(numQuantity)) {
-    return {
-      isValid: false,
-      message: 'Quantity must be a valid number'
-    };
+  if (!numberValidation.isValid) {
+    return numberValidation
   }
   
-  if (numQuantity < min) {
-    return {
-      isValid: false,
-      message: `Quantity must be at least ${min}`
-    };
+  if (!Number.isInteger(Number(rating))) {
+    return { isValid: false, error: 'Rating must be a whole number' }
   }
   
-  if (numQuantity > max) {
-    return {
-      isValid: false,
-      message: `Quantity cannot exceed ${max}`
-    };
-  }
-  
-  return {
-    isValid: true,
-    message: 'Quantity is valid'
-  };
-};
+  return { isValid: true }
+}
 
-/**
- * Validate file upload
- */
-export const validateFile = (file, options = {}) => {
-  const {
-    maxSize = 5 * 1024 * 1024, // 5MB default
-    allowedTypes = ['image/jpeg', 'image/png', 'image/gif'],
-    allowedExtensions = ['.jpg', '.jpeg', '.png', '.gif']
-  } = options;
+// Comment validation
+export const validateComment = (comment, required = false) => {
+  if (!comment || !comment.trim()) {
+    if (required) {
+      return { isValid: false, error: 'Comment is required' }
+    }
+    return { isValid: true } // Optional comment
+  }
   
+  const trimmedComment = comment.trim()
+  
+  if (trimmedComment.length < VALIDATION_RULES.COMMENT_MIN_LENGTH) {
+    return { 
+      isValid: false, 
+      error: `Comment must be at least ${VALIDATION_RULES.COMMENT_MIN_LENGTH} characters long` 
+    }
+  }
+  
+  if (trimmedComment.length > VALIDATION_RULES.COMMENT_MAX_LENGTH) {
+    return { 
+      isValid: false, 
+      error: `Comment must be less than ${VALIDATION_RULES.COMMENT_MAX_LENGTH} characters` 
+    }
+  }
+  
+  return { isValid: true }
+}
+
+// Image file validation
+export const validateImageFile = (file) => {
   if (!file) {
-    return {
-      isValid: false,
-      message: 'File is required'
-    };
+    return { isValid: false, error: 'Please select an image file' }
   }
   
-  if (file.size > maxSize) {
-    return {
-      isValid: false,
-      message: `File size cannot exceed ${Math.round(maxSize / 1024 / 1024)}MB`
-    };
-  }
-  
-  if (!allowedTypes.includes(file.type)) {
-    return {
-      isValid: false,
-      message: `File type not allowed. Allowed types: ${allowedTypes.join(', ')}`
-    };
-  }
-  
-  const extension = '.' + file.name.split('.').pop().toLowerCase();
-  if (!allowedExtensions.includes(extension)) {
-    return {
-      isValid: false,
-      message: `File extension not allowed. Allowed extensions: ${allowedExtensions.join(', ')}`
-    };
-  }
-  
-  return {
-    isValid: true,
-    message: 'File is valid'
-  };
-};
-
-/**
- * Validate form with multiple fields
- */
-export const validateForm = (formData, rules) => {
-  const errors = {};
-  let isValid = true;
-  
-  Object.keys(rules).forEach(field => {
-    const rule = rules[field];
-    const value = formData[field];
-    
-    if (rule.required && (!value || !value.toString().trim())) {
-      errors[field] = `${field} is required`;
-      isValid = false;
-      return;
+  // Check file type
+  if (!IMAGE_CONFIG.ALLOWED_TYPES.includes(file.type)) {
+    return { 
+      isValid: false, 
+      error: `Invalid file type. Allowed types: ${IMAGE_CONFIG.ALLOWED_EXTENSIONS.join(', ')}` 
     }
+  }
+  
+  // Check file size
+  if (file.size > IMAGE_CONFIG.MAX_SIZE) {
+    const maxSizeMB = IMAGE_CONFIG.MAX_SIZE / (1024 * 1024)
+    return { 
+      isValid: false, 
+      error: `File size too large. Maximum size: ${maxSizeMB}MB` 
+    }
+  }
+  
+  return { isValid: true }
+}
+
+// Category name validation
+export const validateCategoryName = (name) => {
+  if (!name || !name.trim()) {
+    return { isValid: false, error: 'Category name is required' }
+  }
+  
+  const trimmedName = name.trim()
+  
+  if (trimmedName.length < VALIDATION_RULES.CATEGORY_NAME_MIN_LENGTH) {
+    return { 
+      isValid: false, 
+      error: `Category name must be at least ${VALIDATION_RULES.CATEGORY_NAME_MIN_LENGTH} characters long` 
+    }
+  }
+  
+  if (trimmedName.length > VALIDATION_RULES.CATEGORY_NAME_MAX_LENGTH) {
+    return { 
+      isValid: false, 
+      error: `Category name must be less than ${VALIDATION_RULES.CATEGORY_NAME_MAX_LENGTH} characters` 
+    }
+  }
+  
+  return { isValid: true }
+}
+
+// Product name validation
+export const validateProductName = (name) => {
+  if (!name || !name.trim()) {
+    return { isValid: false, error: 'Product name is required' }
+  }
+  
+  const trimmedName = name.trim()
+  
+  if (trimmedName.length < VALIDATION_RULES.PRODUCT_NAME_MIN_LENGTH) {
+    return { 
+      isValid: false, 
+      error: `Product name must be at least ${VALIDATION_RULES.PRODUCT_NAME_MIN_LENGTH} characters long` 
+    }
+  }
+  
+  if (trimmedName.length > VALIDATION_RULES.PRODUCT_NAME_MAX_LENGTH) {
+    return { 
+      isValid: false, 
+      error: `Product name must be less than ${VALIDATION_RULES.PRODUCT_NAME_MAX_LENGTH} characters` 
+    }
+  }
+  
+  return { isValid: true }
+}
+
+// Description validation
+export const validateDescription = (description, required = true) => {
+  if (!description || !description.trim()) {
+    if (required) {
+      return { isValid: false, error: 'Description is required' }
+    }
+    return { isValid: true }
+  }
+  
+  const trimmedDescription = description.trim()
+  
+  if (trimmedDescription.length > VALIDATION_RULES.DESCRIPTION_MAX_LENGTH) {
+    return { 
+      isValid: false, 
+      error: `Description must be less than ${VALIDATION_RULES.DESCRIPTION_MAX_LENGTH} characters` 
+    }
+  }
+  
+  return { isValid: true }
+}
+
+// Form validation helper
+export const validateForm = (fields, validationRules) => {
+  const errors = {}
+  let isValid = true
+  
+  Object.keys(validationRules).forEach(fieldName => {
+    const value = fields[fieldName]
+    const validator = validationRules[fieldName]
     
-    if (value && rule.validator) {
-      const result = rule.validator(value);
+    if (typeof validator === 'function') {
+      const result = validator(value)
       if (!result.isValid) {
-        errors[field] = result.message;
-        isValid = false;
+        errors[fieldName] = result.error
+        isValid = false
       }
     }
-  });
+  })
   
-  return {
-    isValid,
-    errors
-  };
-};
+  return { isValid, errors }
+}
 
-/**
- * Real-time validation for form fields
- */
-export const createFieldValidator = (validationRules) => {
-  return (fieldName, value) => {
-    const rule = validationRules[fieldName];
-    if (!rule) return { isValid: true, message: '' };
-    
-    if (rule.required && (!value || !value.toString().trim())) {
-      return {
-        isValid: false,
-        message: `${fieldName} is required`
-      };
+// Login form validation
+export const validateLoginForm = (email, password) => {
+  return validateForm(
+    { email, password },
+    {
+      email: validateEmail,
+      password: validatePassword
     }
-    
-    if (value && rule.validator) {
-      return rule.validator(value);
-    }
-    
-    return { isValid: true, message: '' };
-  };
-};
+  )
+}
 
-export default {
-  validateEmail,
-  validatePassword,
-  validateSimplePassword,
-  validatePasswordConfirmation,
-  validateName,
-  validatePhone,
-  validateAddress,
-  validatePostalCode,
-  validateCreditCard,
-  validateExpiryDate,
-  validateCVV,
-  validateUrl,
-  validatePrice,
-  validateQuantity,
-  validateFile,
-  validateForm,
-  createFieldValidator
-};
+// Register form validation
+export const validateRegisterForm = (name, email, password, confirmPassword) => {
+  const baseValidation = validateForm(
+    { name, email, password },
+    {
+      name: validateName,
+      email: validateEmail,
+      password: validatePassword
+    }
+  )
+  
+  // Check password confirmation
+  if (password !== confirmPassword) {
+    baseValidation.isValid = false
+    baseValidation.errors.confirmPassword = 'Passwords do not match'
+  }
+  
+  return baseValidation
+}
+
+// Product form validation
+export const validateProductForm = (name, description, price, stock) => {
+  return validateForm(
+    { name, description, price, stock },
+    {
+      name: validateProductName,
+      description: (desc) => validateDescription(desc, true),
+      price: validatePrice,
+      stock: validateStock
+    }
+  )
+}

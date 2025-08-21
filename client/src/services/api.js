@@ -1,130 +1,82 @@
-// API utility functions using fetch
+// API configuration and base fetch wrapper
+const API_BASE_URL = '/api'
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+// Get auth token from localStorage
+const getAuthToken = () => localStorage.getItem('token')
 
-// Helper function to get headers with auth token
-const getHeaders = (includeAuth = true, isFormData = false) => {
-  const headers = {};
+// Base fetch wrapper with auth headers
+export const apiRequest = async (endpoint, options = {}) => {
+  const url = `${API_BASE_URL}${endpoint}`
+  const token = getAuthToken()
   
-  if (!isFormData) {
-    headers['Content-Type'] = 'application/json';
-  }
-  
-  if (includeAuth) {
-    const token = localStorage.getItem('token');
-    if (token) {
-      headers['Authorization'] = `Bearer ${token}`;
-    }
-  }
-  
-  return headers;
-};
-
-// Helper function to handle fetch responses
-const handleResponse = async (response) => {
-  // Handle token expiration
-  if (response.status === 401) {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    window.location.href = '/login';
-  }
-
-  // Parse response
-  let data;
-  const contentType = response.headers.get('content-type');
-  
-  if (contentType && contentType.includes('application/json')) {
-    data = await response.json();
-  } else {
-    data = await response.text();
-  }
-
-  if (!response.ok) {
-    const error = new Error(data.message || `HTTP Error: ${response.status}`);
-    error.status = response.status;
-    error.response = { data, status: response.status };
-    throw error;
-  }
-
-  return { data, status: response.status };
-};
-
-// GET request
-export const get = async (endpoint) => {
-  const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+  const config = {
     method: 'GET',
-    headers: getHeaders(),
-  });
-  
-  return handleResponse(response);
-};
-
-// POST request
-export const post = async (endpoint, data, isFormData = false) => {
-  const headers = getHeaders(true, isFormData);
-  
-  const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-    method: 'POST',
-    headers,
-    body: isFormData ? data : JSON.stringify(data),
-  });
-  
-  return handleResponse(response);
-};
-
-// PUT request
-export const put = async (endpoint, data, isFormData = false) => {
-  const headers = getHeaders(true, isFormData);
-  
-  const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-    method: 'PUT',
-    headers,
-    body: isFormData ? data : JSON.stringify(data),
-  });
-  
-  return handleResponse(response);
-};
-
-// DELETE request
-export const del = async (endpoint) => {
-  const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-    method: 'DELETE',
-    headers: getHeaders(),
-  });
-  
-  return handleResponse(response);
-};
-
-// POST without auth (for login/register)
-export const postNoAuth = async (endpoint, data) => {
-  const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-    method: 'POST',
-    headers: getHeaders(false),
-    body: JSON.stringify(data),
-  });
-  
-  return handleResponse(response);
-};
-
-// Helper function for handling API errors
-export const handleApiError = (error) => {
-  if (error.response?.data?.message) {
-    return error.response.data.message;
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token && { 'Authorization': `Bearer ${token}` }),
+      ...options.headers
+    },
+    ...options
   }
-  return error.message || 'An unexpected error occurred';
-};
 
-// Helper function for creating form data
-export const createFormData = (data) => {
-  const formData = new FormData();
+  const response = await fetch(url, config)
   
-  Object.keys(data).forEach(key => {
-    if (data[key] !== null && data[key] !== undefined) {
-      formData.append(key, data[key]);
-    }
-  });
+  // Handle auth errors
+  if (response.status === 401) {
+    localStorage.removeItem('token')
+    window.location.href = '/login'
+    throw new Error('Session expired')
+  }
   
-  return formData;
-};
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ message: 'Network error' }))
+    throw new Error(error.message || 'Request failed')
+  }
+  
+  return response.json()
+}
 
-export default { get, post, put, del, postNoAuth, handleApiError, createFormData };
+// HTTP methods
+export const get = (endpoint) => apiRequest(endpoint)
+
+export const post = (endpoint, data) => apiRequest(endpoint, {
+  method: 'POST',
+  body: JSON.stringify(data)
+})
+
+export const put = (endpoint, data) => apiRequest(endpoint, {
+  method: 'PUT', 
+  body: JSON.stringify(data)
+})
+
+export const del = (endpoint) => apiRequest(endpoint, {
+  method: 'DELETE'
+})
+
+// Form data upload (for images)
+export const postFormData = async (endpoint, formData) => {
+  const url = `${API_BASE_URL}${endpoint}`
+  const token = getAuthToken()
+  
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      ...(token && { 'Authorization': `Bearer ${token}` })
+      // Don't set Content-Type for FormData
+    },
+    body: formData
+  })
+  
+  if (response.status === 401) {
+    localStorage.removeItem('token')
+    window.location.href = '/login'
+    throw new Error('Session expired')
+  }
+  
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ message: 'Upload failed' }))
+    throw new Error(error.message || 'Upload failed')
+  }
+  
+  return response.json()
+}

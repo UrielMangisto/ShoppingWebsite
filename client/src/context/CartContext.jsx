@@ -1,259 +1,309 @@
-import React, { createContext, useContext, useReducer, useEffect } from 'react';
-import { cartService } from '../services/CartService';
-import { useAuth } from './AuthContext';
+import React, { createContext, useContext, useReducer, useEffect } from 'react'
+import { useAuth } from './AuthContext'
 
-// Initial state
+// Types d'actions pour le reducer
+const CART_ACTIONS = {
+  LOAD_CART_START: 'LOAD_CART_START',
+  LOAD_CART_SUCCESS: 'LOAD_CART_SUCCESS',
+  LOAD_CART_ERROR: 'LOAD_CART_ERROR',
+  ADD_TO_CART_START: 'ADD_TO_CART_START',
+  ADD_TO_CART_SUCCESS: 'ADD_TO_CART_SUCCESS',
+  ADD_TO_CART_ERROR: 'ADD_TO_CART_ERROR',
+  UPDATE_CART_ITEM_START: 'UPDATE_CART_ITEM_START',
+  UPDATE_CART_ITEM_SUCCESS: 'UPDATE_CART_ITEM_SUCCESS',
+  UPDATE_CART_ITEM_ERROR: 'UPDATE_CART_ITEM_ERROR',
+  REMOVE_FROM_CART_START: 'REMOVE_FROM_CART_START',
+  REMOVE_FROM_CART_SUCCESS: 'REMOVE_FROM_CART_SUCCESS',
+  REMOVE_FROM_CART_ERROR: 'REMOVE_FROM_CART_ERROR',
+  CLEAR_CART: 'CLEAR_CART',
+  CLEAR_ERROR: 'CLEAR_ERROR'
+}
+
+// État initial
 const initialState = {
   items: [],
-  isLoading: false,
-  error: null,
-  total: 0,
   totalItems: 0,
-};
+  totalPrice: 0,
+  isLoading: false,
+  error: null
+}
 
-// Action types
-const CART_ACTIONS = {
-  SET_LOADING: 'SET_LOADING',
-  SET_ERROR: 'SET_ERROR',
-  CLEAR_ERROR: 'CLEAR_ERROR',
-  SET_CART: 'SET_CART',
-  ADD_ITEM: 'ADD_ITEM',
-  UPDATE_ITEM: 'UPDATE_ITEM',
-  REMOVE_ITEM: 'REMOVE_ITEM',
-  CLEAR_CART: 'CLEAR_CART',
-  CALCULATE_TOTALS: 'CALCULATE_TOTALS',
-};
+// Fonction pour calculer les totaux
+function calculateTotals(items) {
+  const totalItems = items.reduce((total, item) => total + item.quantity, 0)
+  const totalPrice = items.reduce((total, item) => total + (item.productPrice * item.quantity), 0)
+  return { totalItems, totalPrice }
+}
 
-// Reducer function
-const cartReducer = (state, action) => {
+// Reducer pour gérer les états du panier
+function cartReducer(state, action) {
   switch (action.type) {
-    case CART_ACTIONS.SET_LOADING:
+    case CART_ACTIONS.LOAD_CART_START:
+    case CART_ACTIONS.ADD_TO_CART_START:
+    case CART_ACTIONS.UPDATE_CART_ITEM_START:
+    case CART_ACTIONS.REMOVE_FROM_CART_START:
       return {
         ...state,
-        isLoading: action.payload,
-      };
-    
-    case CART_ACTIONS.SET_ERROR:
-      return {
-        ...state,
-        error: action.payload,
-        isLoading: false,
-      };
-    
-    case CART_ACTIONS.CLEAR_ERROR:
-      return {
-        ...state,
-        error: null,
-      };
-    
-    case CART_ACTIONS.SET_CART:
+        isLoading: true,
+        error: null
+      }
+
+    case CART_ACTIONS.LOAD_CART_SUCCESS:
+      const { totalItems, totalPrice } = calculateTotals(action.payload)
       return {
         ...state,
         items: action.payload,
+        totalItems,
+        totalPrice,
         isLoading: false,
-        error: null,
-      };
-    
-    case CART_ACTIONS.ADD_ITEM: {
-      const existingItem = state.items.find(item => item.product_id === action.payload.product_id);
-      
-      if (existingItem) {
-        return {
-          ...state,
-          items: state.items.map(item =>
-            item.product_id === action.payload.product_id
-              ? { ...item, quantity: item.quantity + action.payload.quantity }
-              : item
-          ),
-        };
+        error: null
       }
-      
+
+    case CART_ACTIONS.ADD_TO_CART_SUCCESS:
+    case CART_ACTIONS.UPDATE_CART_ITEM_SUCCESS:
+    case CART_ACTIONS.REMOVE_FROM_CART_SUCCESS:
+      // Recharger le panier après modification
       return {
         ...state,
-        items: [...state.items, action.payload],
-      };
-    }
-    
-    case CART_ACTIONS.UPDATE_ITEM:
+        isLoading: false,
+        error: null
+      }
+
+    case CART_ACTIONS.LOAD_CART_ERROR:
+    case CART_ACTIONS.ADD_TO_CART_ERROR:
+    case CART_ACTIONS.UPDATE_CART_ITEM_ERROR:
+    case CART_ACTIONS.REMOVE_FROM_CART_ERROR:
       return {
         ...state,
-        items: state.items.map(item =>
-          item.id === action.payload.id
-            ? { ...item, quantity: action.payload.quantity }
-            : item
-        ),
-      };
-    
-    case CART_ACTIONS.REMOVE_ITEM:
-      return {
-        ...state,
-        items: state.items.filter(item => item.id !== action.payload),
-      };
-    
+        isLoading: false,
+        error: action.payload
+      }
+
     case CART_ACTIONS.CLEAR_CART:
       return {
         ...state,
         items: [],
-        total: 0,
         totalItems: 0,
-      };
-    
-    case CART_ACTIONS.CALCULATE_TOTALS: {
-      const total = state.items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-      const totalItems = state.items.reduce((sum, item) => sum + item.quantity, 0);
-      
+        totalPrice: 0,
+        error: null
+      }
+
+    case CART_ACTIONS.CLEAR_ERROR:
       return {
         ...state,
-        total,
-        totalItems,
-      };
-    }
-    
+        error: null
+      }
+
     default:
-      return state;
+      return state
   }
-};
+}
 
-// Create context
-const CartContext = createContext();
+// Création du Context
+const CartContext = createContext()
 
-// Cart provider component
-export const CartProvider = ({ children }) => {
-  const [state, dispatch] = useReducer(cartReducer, initialState);
-  const { isAuthenticated, user } = useAuth();
+// Provider component
+export function CartProvider({ children }) {
+  const [state, dispatch] = useReducer(cartReducer, initialState)
+  const { isAuthenticated, token } = useAuth()
 
-  // Calculate totals whenever items change
+  // Charger le panier quand l'utilisateur se connecte
   useEffect(() => {
-    dispatch({ type: CART_ACTIONS.CALCULATE_TOTALS });
-  }, [state.items]);
-
-  // Load cart when user logs in
-  useEffect(() => {
-    if (isAuthenticated && user) {
-      loadCart();
+    if (isAuthenticated && token) {
+      loadCart()
     } else {
-      // Clear cart when user logs out
-      dispatch({ type: CART_ACTIONS.CLEAR_CART });
+      // Si pas connecté, vider le panier
+      dispatch({ type: CART_ACTIONS.CLEAR_CART })
     }
-  }, [isAuthenticated, user]);
+  }, [isAuthenticated, token])
 
-  // Load cart from server
+  // Fonction pour charger le panier
   const loadCart = async () => {
-    dispatch({ type: CART_ACTIONS.SET_LOADING, payload: true });
-    
-    try {
-      const response = await cartService.getCart();
-      dispatch({ type: CART_ACTIONS.SET_CART, payload: response.data });
-    } catch (error) {
-      const errorMessage = error.response?.data?.message || 'Failed to load cart';
-      dispatch({ type: CART_ACTIONS.SET_ERROR, payload: errorMessage });
-    }
-  };
+    if (!isAuthenticated || !token) return
 
-  // Add item to cart
+    dispatch({ type: CART_ACTIONS.LOAD_CART_START })
+
+    try {
+      const response = await fetch('/api/cart', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+
+      if (!response.ok) {
+        throw new Error('Erreur lors du chargement du panier')
+      }
+
+      const data = await response.json()
+      
+      dispatch({
+        type: CART_ACTIONS.LOAD_CART_SUCCESS,
+        payload: data.items || []
+      })
+    } catch (error) {
+      dispatch({
+        type: CART_ACTIONS.LOAD_CART_ERROR,
+        payload: error.message
+      })
+    }
+  }
+
+  // Fonction pour ajouter un produit au panier
   const addToCart = async (productId, quantity = 1) => {
-    if (!isAuthenticated) {
-      dispatch({ type: CART_ACTIONS.SET_ERROR, payload: 'Please login to add items to cart' });
-      return { success: false, error: 'Please login to add items to cart' };
+    if (!isAuthenticated || !token) {
+      throw new Error('Vous devez être connecté pour ajouter des produits au panier')
     }
 
-    dispatch({ type: CART_ACTIONS.SET_LOADING, payload: true });
-    
+    dispatch({ type: CART_ACTIONS.ADD_TO_CART_START })
+
     try {
-      await cartService.addToCart({ product_id: productId, quantity });
-      await loadCart(); // Reload cart to get updated data
-      return { success: true };
-    } catch (error) {
-      const errorMessage = error.response?.data?.message || 'Failed to add item to cart';
-      dispatch({ type: CART_ACTIONS.SET_ERROR, payload: errorMessage });
-      return { success: false, error: errorMessage };
-    }
-  };
+      const response = await fetch('/api/cart', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ product_id: productId, quantity })
+      })
 
-  // Update cart item quantity
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.message || 'Erreur lors de l\'ajout au panier')
+      }
+
+      dispatch({ type: CART_ACTIONS.ADD_TO_CART_SUCCESS })
+      
+      // Recharger le panier
+      await loadCart()
+      
+      return { success: true }
+    } catch (error) {
+      dispatch({
+        type: CART_ACTIONS.ADD_TO_CART_ERROR,
+        payload: error.message
+      })
+      return { success: false, error: error.message }
+    }
+  }
+
+  // Fonction pour mettre à jour la quantité d'un item
   const updateCartItem = async (itemId, quantity) => {
-    if (quantity <= 0) {
-      return removeFromCart(itemId);
-    }
+    if (!isAuthenticated || !token) return
 
-    dispatch({ type: CART_ACTIONS.SET_LOADING, payload: true });
-    
+    dispatch({ type: CART_ACTIONS.UPDATE_CART_ITEM_START })
+
     try {
-      await cartService.updateCartItem(itemId, { quantity });
-      dispatch({ type: CART_ACTIONS.UPDATE_ITEM, payload: { id: itemId, quantity } });
-      dispatch({ type: CART_ACTIONS.SET_LOADING, payload: false });
-      return { success: true };
-    } catch (error) {
-      const errorMessage = error.response?.data?.message || 'Failed to update cart item';
-      dispatch({ type: CART_ACTIONS.SET_ERROR, payload: errorMessage });
-      return { success: false, error: errorMessage };
-    }
-  };
+      const response = await fetch(`/api/cart/${itemId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ quantity })
+      })
 
-  // Remove item from cart
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.message || 'Erreur lors de la mise à jour')
+      }
+
+      dispatch({ type: CART_ACTIONS.UPDATE_CART_ITEM_SUCCESS })
+      
+      // Recharger le panier
+      await loadCart()
+      
+      return { success: true }
+    } catch (error) {
+      dispatch({
+        type: CART_ACTIONS.UPDATE_CART_ITEM_ERROR,
+        payload: error.message
+      })
+      return { success: false, error: error.message }
+    }
+  }
+
+  // Fonction pour supprimer un item du panier
   const removeFromCart = async (itemId) => {
-    dispatch({ type: CART_ACTIONS.SET_LOADING, payload: true });
-    
+    if (!isAuthenticated || !token) return
+
+    dispatch({ type: CART_ACTIONS.REMOVE_FROM_CART_START })
+
     try {
-      await cartService.removeFromCart(itemId);
-      dispatch({ type: CART_ACTIONS.REMOVE_ITEM, payload: itemId });
-      dispatch({ type: CART_ACTIONS.SET_LOADING, payload: false });
-      return { success: true };
+      const response = await fetch(`/api/cart/${itemId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.message || 'Erreur lors de la suppression')
+      }
+
+      dispatch({ type: CART_ACTIONS.REMOVE_FROM_CART_SUCCESS })
+      
+      // Recharger le panier
+      await loadCart()
+      
+      return { success: true }
     } catch (error) {
-      const errorMessage = error.response?.data?.message || 'Failed to remove item from cart';
-      dispatch({ type: CART_ACTIONS.SET_ERROR, payload: errorMessage });
-      return { success: false, error: errorMessage };
+      dispatch({
+        type: CART_ACTIONS.REMOVE_FROM_CART_ERROR,
+        payload: error.message
+      })
+      return { success: false, error: error.message }
     }
-  };
+  }
 
-  // Clear entire cart
+  // Fonction pour vider le panier (après commande)
   const clearCart = () => {
-    dispatch({ type: CART_ACTIONS.CLEAR_CART });
-  };
+    dispatch({ type: CART_ACTIONS.CLEAR_CART })
+  }
 
-  // Clear error
+  // Fonction pour clear les erreurs
   const clearError = () => {
-    dispatch({ type: CART_ACTIONS.CLEAR_ERROR });
-  };
+    dispatch({ type: CART_ACTIONS.CLEAR_ERROR })
+  }
 
-  // Get item count for a specific product
+  // Fonction pour obtenir la quantité d'un produit dans le panier
   const getItemQuantity = (productId) => {
-    const item = state.items.find(item => item.product_id === productId);
-    return item ? item.quantity : 0;
-  };
+    const item = state.items.find(item => item.productId === productId)
+    return item ? item.quantity : 0
+  }
 
-  // Check if product is in cart
+  // Fonction pour vérifier si un produit est dans le panier
   const isInCart = (productId) => {
-    return state.items.some(item => item.product_id === productId);
-  };
+    return state.items.some(item => item.productId === productId)
+  }
 
-  // Context value
+  // Valeurs du context
   const value = {
     ...state,
+    loadCart,
     addToCart,
     updateCartItem,
     removeFromCart,
     clearCart,
     clearError,
-    loadCart,
     getItemQuantity,
-    isInCart,
-  };
+    isInCart
+  }
 
   return (
     <CartContext.Provider value={value}>
       {children}
     </CartContext.Provider>
-  );
-};
+  )
+}
 
-// Custom hook to use cart context
-export const useCart = () => {
-  const context = useContext(CartContext);
+// Hook personnalisé pour utiliser le context
+export function useCart() {
+  const context = useContext(CartContext)
   if (!context) {
-    throw new Error('useCart must be used within a CartProvider');
+    throw new Error('useCart must be used within a CartProvider')
   }
-  return context;
-};
+  return context
+}
 
-export default CartContext;
+export default CartContext

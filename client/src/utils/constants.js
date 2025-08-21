@@ -1,286 +1,156 @@
-// Application Constants
+// API Configuration
+export const API_BASE_URL = '/api'
 
-// API Endpoints
-export const API_ENDPOINTS = {
-  AUTH: {
-    LOGIN: '/auth/login',
-    REGISTER: '/auth/register',
-    FORGOT_PASSWORD: '/auth/forgot-password',
-    RESET_PASSWORD: '/auth/reset-password',
-  },
-  PRODUCTS: {
-    GET_ALL: '/products',
-    GET_BY_ID: (id) => `/products/${id}`,
-    CREATE: '/products',
-    UPDATE: (id) => `/products/${id}`,
-    DELETE: (id) => `/products/${id}`,
-  },
-  CART: {
-    GET: '/cart',
-    ADD: '/cart',
-    UPDATE: (id) => `/cart/${id}`,
-    DELETE: (id) => `/cart/${id}`,
-  },
-  ORDERS: {
-    CREATE: '/orders',
-    GET_MY_ORDERS: '/orders',
-    GET_BY_ID: (id) => `/orders/${id}`,
-    GET_ALL_ADMIN: '/orders/all/admin',
-  },
-  USERS: {
-    GET_ALL: '/users',
-    GET_BY_ID: (id) => `/users/${id}`,
-    UPDATE: (id) => `/users/${id}`,
-    DELETE: (id) => `/users/${id}`,
-  },
-  CATEGORIES: {
-    GET_ALL: '/categories',
-    CREATE: '/categories',
-    UPDATE: (id) => `/categories/${id}`,
-    DELETE: (id) => `/categories/${id}`,
-  },
-};
+// User Roles
+export const USER_ROLES = {
+  ADMIN: 'admin',
+  USER: 'user'
+}
+
+// Order Status
+export const ORDER_STATUS = {
+  PROCESSING: 'processing',
+  CONFIRMED: 'confirmed',
+  SHIPPED: 'shipped',
+  DELIVERED: 'delivered',
+  COMPLETED: 'completed'
+}
+
+// Order Status Colors
+export const ORDER_STATUS_COLORS = {
+  [ORDER_STATUS.PROCESSING]: '#f59e0b',
+  [ORDER_STATUS.CONFIRMED]: '#3b82f6',
+  [ORDER_STATUS.SHIPPED]: '#8b5cf6',
+  [ORDER_STATUS.DELIVERED]: '#10b981',
+  [ORDER_STATUS.COMPLETED]: '#6b7280'
+}
+
+// Product Stock Status
+export const STOCK_STATUS = {
+  IN_STOCK: 'in_stock',
+  LOW_STOCK: 'low_stock',
+  OUT_OF_STOCK: 'out_of_stock',
+  UNLIMITED: 'unlimited'
+}
+
+// Stock Status Colors
+export const STOCK_STATUS_COLORS = {
+  [STOCK_STATUS.IN_STOCK]: '#10b981',
+  [STOCK_STATUS.LOW_STOCK]: '#f59e0b',
+  [STOCK_STATUS.OUT_OF_STOCK]: '#ef4444',
+  [STOCK_STATUS.UNLIMITED]: '#6b7280'
+}
+
+// Image Configuration
+export const IMAGE_CONFIG = {
+  MAX_SIZE: 5 * 1024 * 1024, // 5MB
+  ALLOWED_TYPES: ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'],
+  ALLOWED_EXTENSIONS: ['.jpg', '.jpeg', '.png', '.gif', '.webp']
+}
+
+// Pagination
+export const PAGINATION = {
+  DEFAULT_PAGE_SIZE: 12,
+  PAGE_SIZE_OPTIONS: [6, 12, 24, 48]
+}
+
+// Validation Rules
+export const VALIDATION_RULES = {
+  PASSWORD_MIN_LENGTH: 6,
+  NAME_MIN_LENGTH: 2,
+  NAME_MAX_LENGTH: 50,
+  COMMENT_MIN_LENGTH: 10,
+  COMMENT_MAX_LENGTH: 1000,
+  CATEGORY_NAME_MIN_LENGTH: 2,
+  CATEGORY_NAME_MAX_LENGTH: 50,
+  PRODUCT_NAME_MIN_LENGTH: 2,
+  PRODUCT_NAME_MAX_LENGTH: 100,
+  DESCRIPTION_MAX_LENGTH: 1000
+}
+
+// Rating System
+export const RATING = {
+  MIN: 1,
+  MAX: 5,
+  DEFAULT: 5
+}
+
+// Currency
+export const CURRENCY = {
+  CODE: 'USD',
+  SYMBOL: '$',
+  LOCALE: 'en-US'
+}
+
+// Date Formats
+export const DATE_FORMATS = {
+  SHORT: { month: 'short', day: 'numeric', year: 'numeric' },
+  LONG: { month: 'long', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' },
+  TIME_ONLY: { hour: '2-digit', minute: '2-digit' }
+}
 
 // Local Storage Keys
 export const STORAGE_KEYS = {
   TOKEN: 'token',
   USER: 'user',
   CART: 'cart',
-  THEME: 'theme',
-  LANGUAGE: 'language',
-};
+  PREFERENCES: 'preferences'
+}
 
-// User Roles
-export const USER_ROLES = {
-  USER: 'user',
-  ADMIN: 'admin',
-};
-
-// Order Status
-export const ORDER_STATUS = {
-  PENDING: 'pending',
-  PROCESSING: 'processing',
-  SHIPPED: 'shipped',
-  DELIVERED: 'delivered',
-  CANCELLED: 'cancelled',
-  REFUNDED: 'refunded',
-};
-
-// Product Categories (these might come from API, but useful for fallback)
-export const DEFAULT_CATEGORIES = [
-  'Electronics',
-  'Clothing',
-  'Books',
-  'Home & Garden',
-  'Sports',
-  'Beauty',
-  'Toys',
-  'Automotive',
-];
-
-// Form Validation Rules
-export const VALIDATION_RULES = {
-  EMAIL: {
-    PATTERN: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-    MESSAGE: 'Please enter a valid email address',
-  },
-  PASSWORD: {
-    MIN_LENGTH: 6,
-    MESSAGE: 'Password must be at least 6 characters long',
-  },
-  NAME: {
-    MIN_LENGTH: 2,
-    MESSAGE: 'Name must be at least 2 characters long',
-  },
-  PHONE: {
-    PATTERN: /^[\+]?[1-9][\d]{0,15}$/,
-    MESSAGE: 'Please enter a valid phone number',
-  },
-};
-
-// File Upload Constraints
-export const FILE_UPLOAD = {
-  MAX_SIZE: 5 * 1024 * 1024, // 5MB
-  ALLOWED_TYPES: ['image/jpeg', 'image/png', 'image/gif', 'image/jpg'],
-  ALLOWED_EXTENSIONS: ['.jpg', '.jpeg', '.png', '.gif'],
-};
-
-// Pagination
-export const PAGINATION = {
-  DEFAULT_PAGE_SIZE: 12,
-  PAGE_SIZE_OPTIONS: [12, 24, 48],
-  MAX_PAGE_SIZE: 100,
-};
-
-// Search
-export const SEARCH = {
-  MIN_QUERY_LENGTH: 2,
-  DEBOUNCE_DELAY: 300, // milliseconds
-};
-
-// Price Formatting
-export const CURRENCY = {
-  CODE: 'USD',
-  SYMBOL: '$',
-  LOCALE: 'en-US',
-};
-
-// Date Formats
-export const DATE_FORMATS = {
-  DISPLAY: 'MMM DD, YYYY',
-  DISPLAY_WITH_TIME: 'MMM DD, YYYY HH:mm',
-  INPUT: 'YYYY-MM-DD',
-  API: 'YYYY-MM-DDTHH:mm:ss.SSSZ',
-};
-
-// Toast/Notification Types
-export const NOTIFICATION_TYPES = {
-  SUCCESS: 'success',
-  ERROR: 'error',
-  WARNING: 'warning',
-  INFO: 'info',
-};
-
-// Toast/Notification Duration
-export const NOTIFICATION_DURATION = {
-  SHORT: 3000,  // 3 seconds
-  MEDIUM: 5000, // 5 seconds
-  LONG: 8000,   // 8 seconds
-};
-
-// Sort Options for Products
-export const PRODUCT_SORT_OPTIONS = [
-  { value: 'name_asc', label: 'Name: A to Z' },
-  { value: 'name_desc', label: 'Name: Z to A' },
-  { value: 'price_asc', label: 'Price: Low to High' },
-  { value: 'price_desc', label: 'Price: High to Low' },
-  { value: 'created_desc', label: 'Newest First' },
-  { value: 'created_asc', label: 'Oldest First' },
-];
-
-// Price Range Filters
-export const PRICE_RANGES = [
-  { min: 0, max: 25, label: 'Under $25' },
-  { min: 25, max: 50, label: '$25 - $50' },
-  { min: 50, max: 100, label: '$50 - $100' },
-  { min: 100, max: 200, label: '$100 - $200' },
-  { min: 200, max: null, label: 'Over $200' },
-];
-
-// Rating Values
-export const RATINGS = {
-  MIN: 1,
-  MAX: 5,
-  LABELS: {
-    1: 'Poor',
-    2: 'Fair',
-    3: 'Good',
-    4: 'Very Good',
-    5: 'Excellent',
-  },
-};
-
-// Breakpoints for Responsive Design
-export const BREAKPOINTS = {
-  XS: '480px',
-  SM: '640px',
-  MD: '768px',
-  LG: '1024px',
-  XL: '1280px',
-  '2XL': '1536px',
-};
-
-// Z-Index Values
-export const Z_INDEX = {
-  DROPDOWN: 1000,
-  STICKY: 1010,
-  FIXED: 1020,
-  MODAL_BACKDROP: 1030,
-  MODAL: 1040,
-  POPOVER: 1050,
-  TOOLTIP: 1060,
-  TOAST: 1070,
-};
-
-// Animation Durations
-export const ANIMATION_DURATION = {
-  FAST: 150,
-  NORMAL: 300,
-  SLOW: 500,
-};
+// HTTP Status Codes
+export const HTTP_STATUS = {
+  OK: 200,
+  CREATED: 201,
+  BAD_REQUEST: 400,
+  UNAUTHORIZED: 401,
+  FORBIDDEN: 403,
+  NOT_FOUND: 404,
+  INTERNAL_SERVER_ERROR: 500
+}
 
 // Error Messages
 export const ERROR_MESSAGES = {
-  NETWORK: 'Network error. Please check your connection.',
-  UNAUTHORIZED: 'You are not authorized to perform this action.',
-  FORBIDDEN: 'Access denied.',
-  NOT_FOUND: 'The requested resource was not found.',
-  SERVER_ERROR: 'Internal server error. Please try again later.',
-  VALIDATION: 'Please check your input and try again.',
-  UNKNOWN: 'An unexpected error occurred.',
-};
+  NETWORK_ERROR: 'Network error - please check your connection',
+  UNAUTHORIZED: 'You are not authorized to perform this action',
+  SESSION_EXPIRED: 'Your session has expired - please log in again',
+  SERVER_ERROR: 'Server error - please try again later',
+  VALIDATION_ERROR: 'Please check your input and try again',
+  NOT_FOUND: 'The requested resource was not found'
+}
 
 // Success Messages
 export const SUCCESS_MESSAGES = {
-  LOGIN: 'Successfully logged in!',
-  REGISTER: 'Account created successfully!',
-  LOGOUT: 'Successfully logged out!',
-  PASSWORD_RESET: 'Password reset email sent!',
-  PASSWORD_CHANGED: 'Password changed successfully!',
-  PROFILE_UPDATED: 'Profile updated successfully!',
-  PRODUCT_ADDED: 'Product added to cart!',
-  ORDER_PLACED: 'Order placed successfully!',
-  ITEM_DELETED: 'Item deleted successfully!',
-};
+  LOGIN_SUCCESS: 'Successfully logged in',
+  LOGOUT_SUCCESS: 'Successfully logged out',
+  REGISTRATION_SUCCESS: 'Account created successfully',
+  PRODUCT_ADDED: 'Product added to cart',
+  ORDER_CREATED: 'Order placed successfully',
+  REVIEW_ADDED: 'Review added successfully',
+  PROFILE_UPDATED: 'Profile updated successfully'
+}
 
-// Loading Messages
-export const LOADING_MESSAGES = {
-  DEFAULT: 'Loading...',
-  PRODUCTS: 'Loading products...',
-  CART: 'Loading cart...',
-  ORDERS: 'Loading orders...',
-  PROFILE: 'Loading profile...',
-  SAVING: 'Saving...',
-  DELETING: 'Deleting...',
-  PROCESSING: 'Processing...',
-};
-
-// Routes
+// Navigation Routes
 export const ROUTES = {
   HOME: '/',
+  LOGIN: '/login',
+  REGISTER: '/register',
   PRODUCTS: '/products',
-  PRODUCT_DETAIL: (id) => `/products/${id}`,
+  PRODUCT_DETAIL: '/products/:id',
   CART: '/cart',
   CHECKOUT: '/checkout',
   ORDERS: '/orders',
-  PROFILE: '/profile',
-  LOGIN: '/login',
-  REGISTER: '/register',
-  FORGOT_PASSWORD: '/forgot-password',
-  RESET_PASSWORD: (token) => `/reset-password/${token}`,
+  ORDER_DETAIL: '/orders/:id',
   ADMIN: '/admin',
-};
+  ADMIN_USERS: '/admin/users',
+  ADMIN_PRODUCTS: '/admin/products',
+  ADMIN_ORDERS: '/admin/orders',
+  ADMIN_CATEGORIES: '/admin/categories'
+}
 
-export default {
-  API_ENDPOINTS,
-  STORAGE_KEYS,
-  USER_ROLES,
-  ORDER_STATUS,
-  VALIDATION_RULES,
-  FILE_UPLOAD,
-  PAGINATION,
-  CURRENCY,
-  DATE_FORMATS,
-  NOTIFICATION_TYPES,
-  NOTIFICATION_DURATION,
-  PRODUCT_SORT_OPTIONS,
-  PRICE_RANGES,
-  RATINGS,
-  BREAKPOINTS,
-  Z_INDEX,
-  ANIMATION_DURATION,
-  ERROR_MESSAGES,
-  SUCCESS_MESSAGES,
-  LOADING_MESSAGES,
-  ROUTES,
-};
+// Breakpoints for responsive design
+export const BREAKPOINTS = {
+  MOBILE: '480px',
+  TABLET: '768px',
+  DESKTOP: '1024px',
+  LARGE_DESKTOP: '1440px'
+}

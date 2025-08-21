@@ -1,51 +1,30 @@
-import { get, post, put, del } from './api.js'
+import api from './api';
+import authService from './authService';
 
-// Get all categories
-export const getCategories = async () => {
-  return await get('/categories')
-}
+export const categoriesService = {
+  getCategories: async () => {
+    return api.get('/categories');
+  },
 
-// Get single category
-export const getCategory = async (id) => {
-  return await get(`/categories/${id}`)
-}
+  getCategory: async (id) => {
+    return api.get(`/categories/${id}`);
+  },
 
-// Create category (admin only)
-export const createCategory = async (name) => {
-  return await post('/categories', { name })
-}
+  // Admin operations
+  createCategory: async (name) => {
+    const token = authService.getToken();
+    return api.post('/categories', { name }, token);
+  },
 
-// Update category (admin only)
-export const updateCategory = async (id, name) => {
-  return await put(`/categories/${id}`, { name })
-}
+  updateCategory: async (id, name) => {
+    const token = authService.getToken();
+    return api.put(`/categories/${id}`, { name }, token);
+  },
 
-// Delete category (admin only)
-export const deleteCategory = async (id) => {
-  return await del(`/categories/${id}`)
-}
+  deleteCategory: async (id) => {
+    const token = authService.getToken();
+    return api.delete(`/categories/${id}`, token);
+  },
+};
 
-// Format category name
-export const formatCategoryName = (name) => {
-  if (!name || typeof name !== 'string') return 'Unknown Category'
-  
-  return name
-    .trim()
-    .toLowerCase()
-    .split(' ')
-    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(' ')
-}
-
-// Generate URL slug
-export const generateSlug = (name) => {
-  if (!name || typeof name !== 'string') return 'unknown-category'
-  
-  return name
-    .trim()
-    .toLowerCase()
-    .replace(/[^a-z0-9\s-]/g, '')
-    .replace(/\s+/g, '-')
-    .replace(/-+/g, '-')
-    .replace(/^-|-$/g, '')
-}
+export default categoriesService;

@@ -1,89 +1,58 @@
-import { get, post, put, del, postFormData } from './api.js'
+import api from './api';
+import authService from './authService';
 
-// Get all products
-export const getProducts = async (params = {}) => {
-  const queryString = new URLSearchParams(params).toString()
-  const endpoint = queryString ? `/products?${queryString}` : '/products'
-  return await get(endpoint)
-}
+export const productsService = {
+  getAllProducts: async () => {
+    return api.get('/products');
+  },
 
-// Get single product
-export const getProduct = async (id) => {
-  return await get(`/products/${id}`)
-}
+  getProduct: async (id) => {
+    return api.get(`/products/${id}`);
+  },
 
-// Search products
-export const searchProducts = async (query) => {
-  return await get(`/products/search?q=${encodeURIComponent(query)}`)
-}
+  // Admin operations
+  createProduct: async (productData) => {
+    const token = authService.getToken();
+    const formData = new FormData();
 
-// Get recommended products
-export const getRecommendedProducts = async () => {
-  return await get('/products/recommend')
-}
+    const { name, description, price, stock, category_id, image } = productData;
 
-// Create product (admin only)
-export const createProduct = async (productData) => {
-  return await post('/products', productData)
-}
+    // Add required fields
+    formData.append('name', name);
+    formData.append('description', description);
+    formData.append('price', price);
+    formData.append('stock', stock);
+    formData.append('category_id', category_id);
 
-// Create product with image (admin only)
-export const createProductWithImage = async (productData, imageFile) => {
-  const formData = new FormData()
-  
-  // Add product data
-  Object.keys(productData).forEach(key => {
-    if (productData[key] !== undefined && productData[key] !== '') {
-      formData.append(key, productData[key])
+    // Add image if provided
+    if (image) {
+      formData.append('image', image);
     }
-  })
-  
-  // Add image
-  if (imageFile) {
-    formData.append('image', imageFile)
-  }
-  
-  return await postFormData('/products', formData)
-}
 
-// Update product (admin only)
-export const updateProduct = async (id, productData) => {
-  return await put(`/products/${id}`, productData)
-}
+    return api.post('/products', formData, token);
+  },
 
-// Update product with image (admin only)
-export const updateProductWithImage = async (id, productData, imageFile) => {
-  const formData = new FormData()
-  
-  // Add product data
-  Object.keys(productData).forEach(key => {
-    if (productData[key] !== undefined && productData[key] !== '') {
-      formData.append(key, productData[key])
-    }
-  })
-  
-  // Add image if provided
-  if (imageFile) {
-    formData.append('image', imageFile)
-  }
-  
-  return await postFormData(`/products/${id}`, formData)
-}
+  updateProduct: async (id, productData) => {
+    const token = authService.getToken();
+    const formData = new FormData();
 
-// Delete product (admin only)
-export const deleteProduct = async (id) => {
-  return await del(`/products/${id}`)
-}
+    const { name, description, price, stock, category_id, image } = productData;
 
-// Utility functions
-export const formatPrice = (price) => {
-  if (price === undefined || price === null) return 'N/A'
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD'
-  }).format(price)
-}
+    // Add fields that are present
+    if (name) formData.append('name', name);
+    if (description) formData.append('description', description);
+    if (price) formData.append('price', price);
+    if (stock) formData.append('stock', stock);
+    if (category_id) formData.append('category_id', category_id);
+    if (image) formData.append('image', image);
 
-export const getImageUrl = (imageId) => {
-  return imageId ? `/api/images/${imageId}` : null
-}
+    return api.put(`/products/${id}`, formData, token);
+  },
+
+  deleteProduct: async (id) => {
+    const token = authService.getToken();
+    return api.delete(`/products/${id}`, token);
+  },
+};
+
+export default productsService;

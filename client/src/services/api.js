@@ -1,82 +1,77 @@
-// API configuration and base fetch wrapper
-const API_BASE_URL = '/api'
+const API_BASE_URL = 'http://localhost:3000/api';
 
-// Get auth token from localStorage
-const getAuthToken = () => localStorage.getItem('token')
-
-// Base fetch wrapper with auth headers
-export const apiRequest = async (endpoint, options = {}) => {
-  const url = `${API_BASE_URL}${endpoint}`
-  const token = getAuthToken()
-  
-  const config = {
-    method: 'GET',
-    headers: {
-      'Content-Type': 'application/json',
-      ...(token && { 'Authorization': `Bearer ${token}` }),
-      ...options.headers
-    },
-    ...options
-  }
-
-  const response = await fetch(url, config)
-  
-  // Handle auth errors
-  if (response.status === 401) {
-    localStorage.removeItem('token')
-    window.location.href = '/login'
-    throw new Error('Session expired')
-  }
-  
+// Utility function to handle HTTP errors
+const handleResponse = async (response) => {
   if (!response.ok) {
-    const error = await response.json().catch(() => ({ message: 'Network error' }))
-    throw new Error(error.message || 'Request failed')
+    const error = await response.json().catch(() => ({}));
+    throw new Error(error.message || 'An error occurred');
+  }
+  return response.json();
+};
+
+// Configure request headers
+const getHeaders = (token = null) => {
+  const headers = {
+    'Content-Type': 'application/json',
+  };
+  
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
   }
   
-  return response.json()
-}
+  return headers;
+};
 
-// HTTP methods
-export const get = (endpoint) => apiRequest(endpoint)
+// Base API methods
+export const api = {
+  get: async (endpoint, token = null) => {
+    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+      method: 'GET',
+      headers: getHeaders(token),
+    });
+    return handleResponse(response);
+  },
 
-export const post = (endpoint, data) => apiRequest(endpoint, {
-  method: 'POST',
-  body: JSON.stringify(data)
-})
+  post: async (endpoint, data, token = null) => {
+    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+      method: 'POST',
+      headers: getHeaders(token),
+      body: JSON.stringify(data),
+    });
+    return handleResponse(response);
+  },
 
-export const put = (endpoint, data) => apiRequest(endpoint, {
-  method: 'PUT', 
-  body: JSON.stringify(data)
-})
+  put: async (endpoint, data, token = null) => {
+    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+      method: 'PUT',
+      headers: getHeaders(token),
+      body: JSON.stringify(data),
+    });
+    return handleResponse(response);
+  },
 
-export const del = (endpoint) => apiRequest(endpoint, {
-  method: 'DELETE'
-})
+  delete: async (endpoint, token = null) => {
+    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+      method: 'DELETE',
+      headers: getHeaders(token),
+    });
+    return handleResponse(response);
+  },
 
-// Form data upload (for images)
-export const postFormData = async (endpoint, formData) => {
-  const url = `${API_BASE_URL}${endpoint}`
-  const token = getAuthToken()
-  
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: {
-      ...(token && { 'Authorization': `Bearer ${token}` })
-      // Don't set Content-Type for FormData
-    },
-    body: formData
-  })
-  
-  if (response.status === 401) {
-    localStorage.removeItem('token')
-    window.location.href = '/login'
-    throw new Error('Session expired')
-  }
-  
-  if (!response.ok) {
-    const error = await response.json().catch(() => ({ message: 'Upload failed' }))
-    throw new Error(error.message || 'Upload failed')
-  }
-  
-  return response.json()
-}
+  // Special method for file uploads
+  upload: async (endpoint, formData, token = null) => {
+    const headers = {
+      'Authorization': token ? `Bearer ${token}` : '',
+      // Don't set Content-Type here as it will be set automatically for FormData
+    };
+
+    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+      method: 'POST',
+      headers,
+      body: formData,
+    });
+    return handleResponse(response);
+  },
+};
+
+export default api;

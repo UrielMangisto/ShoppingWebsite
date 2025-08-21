@@ -1,48 +1,42 @@
-/* Layout principal de l'application */
-.app {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-}
-
-/* Zone de contenu principal */
-.main {
-  flex: 1;
-  padding: var(--spacing-lg) 0;
-  background-color: var(--light-gray);
-}
-
-/* Page 404 */
-.not-found {
-  text-align: center;
-  padding: var(--spacing-xl);
-  max-width: 600px;
+#root {
+  max-width: 1280px;
   margin: 0 auto;
+  padding: 2rem;
+  text-align: center;
 }
 
-.not-found h1 {
-  color: var(--danger-color);
-  margin-bottom: var(--spacing-md);
-  font-size: 3rem;
+.logo {
+  height: 6em;
+  padding: 1.5em;
+  will-change: filter;
+  transition: filter 300ms;
+}
+.logo:hover {
+  filter: drop-shadow(0 0 2em #646cffaa);
+}
+.logo.react:hover {
+  filter: drop-shadow(0 0 2em #61dafbaa);
 }
 
-.not-found p {
-  color: var(--gray);
-  font-size: 1.2rem;
-  margin-bottom: var(--spacing-lg);
+@keyframes logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
-/* Responsive */
-@media (max-width: 768px) {
-  .main {
-    padding: var(--spacing-md) 0;
+@media (prefers-reduced-motion: no-preference) {
+  a:nth-of-type(2) .logo {
+    animation: logo-spin infinite 20s linear;
   }
-  
-  .not-found h1 {
-    font-size: 2rem;
-  }
-  
-  .not-found p {
-    font-size: 1rem;
-  }
+}
+
+.card {
+  padding: 2em;
+}
+
+.read-the-docs {
+  color: #888;
 }

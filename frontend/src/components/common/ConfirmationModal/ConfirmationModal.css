@@ -1,0 +1,144 @@
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: white;
+  padding: 24px;
+  border-radius: 8px;
+  max-width: 500px;
+  width: 90%;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  position: relative;
+}
+
+.modal-icon {
+  width: 48px;
+  height: 48px;
+  margin: 0 auto 16px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #f3f4f6;
+}
+
+.modal-icon.modal-danger {
+  background-color: #fee2e2;
+}
+
+.modal-icon.modal-warning {
+  background-color: #fef3c7;
+}
+
+.modal-icon.modal-info {
+  background-color: #e0f2fe;
+}
+
+.modal-icon .icon {
+  width: 24px;
+  height: 24px;
+  stroke: currentColor;
+  stroke-width: 2;
+  fill: none;
+}
+
+.modal-danger .icon {
+  color: #dc2626;
+}
+
+.modal-warning .icon {
+  color: #d97706;
+}
+
+.modal-info .icon {
+  color: #2563eb;
+}
+
+.modal-title {
+  font-size: 20px;
+  font-weight: 600;
+  color: #111827;
+  text-align: center;
+  margin-bottom: 8px;
+}
+
+.modal-message {
+  color: #6b7280;
+  text-align: center;
+  margin-bottom: 24px;
+  font-size: 14px;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.modal-button {
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.cancel-button {
+  background-color: white;
+  border: 1px solid #d1d5db;
+  color: #374151;
+}
+
+.cancel-button:hover {
+  background-color: #f3f4f6;
+}
+
+.confirm-button {
+  border: none;
+  color: white;
+}
+
+.confirm-button.modal-danger {
+  background-color: #dc2626;
+}
+
+.confirm-button.modal-danger:hover {
+  background-color: #b91c1c;
+}
+
+.confirm-button.modal-warning {
+  background-color: #d97706;
+}
+
+.confirm-button.modal-warning:hover {
+  background-color: #b45309;
+}
+
+.confirm-button.modal-info {
+  background-color: #2563eb;
+}
+
+.confirm-button.modal-info:hover {
+  background-color: #1d4ed8;
+}
+
+@media (max-width: 640px) {
+  .modal-actions {
+    flex-direction: column;
+  }
+  
+  .modal-button {
+    width: 100%;
+  }
+}

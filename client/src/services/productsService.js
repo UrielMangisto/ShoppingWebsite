@@ -1,9 +1,24 @@
-import api from './api';
-import authService from './authService';
+// src/services/productsService.js - FIXED VERSION
+import api from './api.js';
+import authService from './authService.js';
 
 export const productsService = {
-  getAllProducts: async () => {
-    return api.get('/products');
+  getAllProducts: async (params = {}) => {
+    // Build query string from parameters
+    const queryParams = new URLSearchParams();
+    
+    // Add each parameter if it exists
+    Object.keys(params).forEach(key => {
+      if (params[key] !== null && params[key] !== undefined && params[key] !== '') {
+        queryParams.append(key, params[key]);
+      }
+    });
+    
+    // Build the endpoint URL
+    const queryString = queryParams.toString();
+    const endpoint = queryString ? `/products?${queryString}` : '/products';
+    
+    return api.get(endpoint);
   },
 
   getProduct: async (id) => {
@@ -29,24 +44,59 @@ export const productsService = {
       formData.append('image', image);
     }
 
-    return api.post('/products', formData, token);
+    return api.upload('/products', formData, token);
   },
 
   updateProduct: async (id, productData) => {
+    console.log('🔧 updateProduct called with:', { id, productData });
+    
     const token = authService.getToken();
+    console.log('🔑 Token:', token ? 'Present' : 'Missing');
+    
     const formData = new FormData();
 
     const { name, description, price, stock, category_id, image } = productData;
 
-    // Add fields that are present
-    if (name) formData.append('name', name);
-    if (description) formData.append('description', description);
-    if (price) formData.append('price', price);
-    if (stock) formData.append('stock', stock);
-    if (category_id) formData.append('category_id', category_id);
-    if (image) formData.append('image', image);
+    // Add fields that are present - exactly like the backend expects
+    if (name !== undefined && name !== null) {
+      formData.append('name', name);
+      console.log('📝 Added name:', name);
+    }
+    if (description !== undefined && description !== null) {
+      formData.append('description', description);
+      console.log('📝 Added description:', description.substring(0, 50) + '...');
+    }
+    if (price !== undefined && price !== null) {
+      formData.append('price', price);
+      console.log('💰 Added price:', price);
+    }
+    if (stock !== undefined && stock !== null) {
+      formData.append('stock', stock);
+      console.log('📦 Added stock:', stock);
+    }
+    if (category_id !== undefined && category_id !== null) {
+      formData.append('category_id', category_id);
+      console.log('🏷️ Added category_id:', category_id);
+    }
+    
+    // Only add image if it's a File object (new image selected)
+    if (image && image instanceof File) {
+      formData.append('image', image);
+      console.log('🖼️ Added image:', image.name);
+    } else {
+      console.log('🖼️ No new image to upload');
+    }
 
-    return api.put(`/products/${id}`, formData, token);
+    console.log('🚀 Sending PUT request to /products/' + id);
+    
+    try {
+      const result = await api.uploadPut(`/products/${id}`, formData, token);
+      console.log('✅ Update successful:', result);
+      return result;
+    } catch (error) {
+      console.error('❌ Update failed:', error);
+      throw error;
+    }
   },
 
   deleteProduct: async (id) => {

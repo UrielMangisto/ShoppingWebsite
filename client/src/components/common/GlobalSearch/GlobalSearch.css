@@ -1,0 +1,65 @@
+/* src/components/common/GlobalSearch/GlobalSearch.css */
+.global-search {
+  display: flex;
+  align-items: center;
+  background: #f8f9fa;
+  border-radius: 25px;
+  padding: 0.25rem;
+  max-width: 300px;
+  border: 1px solid #e9ecef;
+  transition: all 0.3s ease;
+}
+
+.global-search:focus-within {
+  border-color: #007bff;
+  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+}
+
+.global-search-input {
+  flex: 1;
+  padding: 0.5rem 1rem;
+  border: none;
+  background: transparent;
+  font-size: 0.9rem;
+  outline: none;
+  color: #333;
+}
+
+.global-search-input::placeholder {
+  color: #999;
+}
+
+.global-search-btn {
+  background: #007bff;
+  border: none;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.3s;
+  font-size: 1rem;
+}
+
+.global-search-btn:hover {
+  background: #0056b3;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .global-search {
+    max-width: 250px;
+  }
+  
+  .global-search-input {
+    font-size: 0.85rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .global-search {
+    max-width: 200px;
+  }
+}

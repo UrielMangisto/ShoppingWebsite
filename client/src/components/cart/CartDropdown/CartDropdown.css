@@ -1,0 +1,284 @@
+
+/* src/components/cart/CartDropdown/CartDropdown.css*/
+.cart-dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+.cart-dropdown-trigger {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: none;
+  border: none;
+  color: #333;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 6px;
+  transition: all 0.3s;
+  text-decoration: none;
+}
+
+.cart-dropdown-trigger:hover {
+  color: #007bff;
+  background: #f8f9fa;
+}
+
+.cart-icon-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cart-symbol {
+  font-size: 1.2rem;
+}
+
+.cart-badge {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  background: #dc3545;
+  color: white;
+  border-radius: 50%;
+  width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  font-weight: 600;
+}
+
+.cart-text {
+  font-size: 0.95rem;
+}
+
+.cart-dropdown-content {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+  width: 350px;
+  max-height: 500px;
+  overflow: hidden;
+  z-index: 1000;
+  border: 1px solid #e9ecef;
+  animation: dropdownSlide 0.2s ease;
+}
+
+@keyframes dropdownSlide {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.cart-dropdown-header {
+  padding: 1rem;
+  background: #f8f9fa;
+  border-bottom: 1px solid #e9ecef;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.cart-dropdown-header h4 {
+  margin: 0;
+  color: #333;
+  font-size: 1.1rem;
+}
+
+.items-count {
+  color: #666;
+  font-size: 0.85rem;
+}
+
+.cart-dropdown-body {
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.empty-cart-dropdown {
+  padding: 2rem;
+  text-align: center;
+}
+
+.empty-cart-dropdown p {
+  color: #666;
+  margin-bottom: 1rem;
+}
+
+.cart-items-preview {
+  padding: 0.5rem;
+}
+
+.cart-item-preview {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  border-radius: 8px;
+  transition: background 0.3s;
+}
+
+.cart-item-preview:hover {
+  background: #f8f9fa;
+}
+
+.item-preview-image {
+  width: 50px;
+  height: 50px;
+  border-radius: 6px;
+  overflow: hidden;
+  background: #f8f9fa;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.item-preview-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.item-preview-image .no-image {
+  color: #999;
+  font-size: 1.2rem;
+}
+
+.item-preview-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.item-preview-name {
+  font-weight: 500;
+  color: #333;
+  font-size: 0.9rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-bottom: 0.25rem;
+}
+
+.item-preview-details {
+  color: #666;
+  font-size: 0.8rem;
+}
+
+.item-preview-remove {
+  background: none;
+  border: none;
+  color: #999;
+  cursor: pointer;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  transition: all 0.3s;
+}
+
+.item-preview-remove:hover {
+  background: #fee;
+  color: #dc3545;
+}
+
+.more-items {
+  text-align: center;
+  padding: 0.5rem;
+  color: #666;
+  font-size: 0.85rem;
+  font-style: italic;
+}
+
+.cart-dropdown-total {
+  padding: 1rem;
+  background: #f8f9fa;
+  border-top: 1px solid #e9ecef;
+}
+
+.total-row {
+  text-align: right;
+  font-weight: 600;
+  color: #333;
+  font-size: 1.1rem;
+}
+
+.cart-dropdown-footer {
+  padding: 1rem;
+  display: flex;
+  gap: 0.5rem;
+}
+
+.btn {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 500;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+}
+
+.btn-primary {
+  background: #007bff;
+  color: white;
+}
+
+.btn-primary:hover {
+  background: #0056b3;
+}
+
+.btn-secondary {
+  background: transparent;
+  color: #6c757d;
+  border: 2px solid #6c757d;
+}
+
+.btn-secondary:hover {
+  background: #6c757d;
+  color: white;
+}
+
+.btn-full {
+  flex: 1;
+}
+
+.btn-sm {
+  padding: 0.5rem 1rem;
+  font-size: 0.85rem;
+}
+
+/* Responsive Design */
+@media (max-width: 480px) {
+  .cart-dropdown-content {
+    width: 320px;
+    right: -100px;
+  }
+  
+  .cart-text {
+    display: none;
+  }
+  
+  .cart-dropdown-trigger {
+    padding: 0.75rem;
+  }
+}

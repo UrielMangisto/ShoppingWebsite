@@ -4,7 +4,7 @@ import { pool } from '../config/db.js';
 export const findCartByUser = async (userId) => {
   const [rows] = await pool.query(`
     SELECT ci.id, ci.product_id, ci.quantity,
-           p.name, p.price, p.image
+           p.name, p.price, p.image_id
     FROM cart_items ci
     JOIN products p ON p.id = ci.product_id
     WHERE ci.user_id = ?`, [userId]);

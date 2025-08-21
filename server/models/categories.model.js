@@ -8,7 +8,7 @@ export const findAllCategories = async () => {
 
 export const findCategoryById = async (id) => {
   const [rows] = await pool.query('SELECT * FROM categories WHERE id = ?', [id]);
-  return rows[0];
+  return rows[0] || null; // Consistent with users.model.js
 };
 
 export const createCategoryRow = async (name) => {

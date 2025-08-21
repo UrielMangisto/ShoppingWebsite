@@ -21,18 +21,12 @@ export const listReviewsByProductFromDB = async (product_id) => {
      ORDER BY r.created_at DESC`,
     [product_id]
   );
-  console.log('[Model] Reviews fetched from DB:', rows);
   return rows;
 };
 
-export const deleteReviewFromDB = async ({ id, user_id, isAdmin }) => {
-  if (isAdmin) {
-    const [res] = await pool.query(`DELETE FROM reviews WHERE id = ?`, [id]);
-    return res.affectedRows;
-  } else {
-    const [res] = await pool.query(`DELETE FROM reviews WHERE id = ? AND user_id = ?`, [id, user_id]);
-    return res.affectedRows;
-  }
+export const deleteReviewFromDB = async ({ id, user_id }) => {
+  const [res] = await pool.query(`DELETE FROM reviews WHERE id = ? AND user_id = ?`, [id, user_id]);
+  return res.affectedRows;
 };
 
 export const updateReviewInDB = async ({ id, user_id, rating, comment }) => {

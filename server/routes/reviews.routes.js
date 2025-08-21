@@ -3,12 +3,12 @@ import express from 'express';
 import { requireAuth, requireAdmin } from '../middleware/auth.middleware.js';
 import { getReviewsForProduct, addReviewForProduct, deleteReviewForProduct as removeReview, updateReviewForProduct as updateReview } from '../controllers/reviews.controller.js';
 
-const router = express.Router();
+const router = express.Router({ mergeParams: true });
 
 // nested under /api
-router.get('/:productId/reviews', getReviewsForProduct);
-router.post('/:productId/reviews', requireAuth, addReviewForProduct);
-router.delete('/:productId/reviews/:id', requireAuth, removeReview);
-router.put('/:productId/reviews/:reviewId', requireAuth, updateReview);
+router.get('/', getReviewsForProduct);
+router.post('/', requireAuth, addReviewForProduct);
+router.delete('/:reviewId', requireAuth, removeReview);
+router.put('/:reviewId', requireAuth, updateReview);
 
 export default router;

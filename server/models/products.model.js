@@ -1,32 +1,87 @@
 // server/models/products.model.js
 import { pool } from '../config/db.js';
 
-export const findAllProducts = async ({ limit, offset } = {}) => {
-  if (limit != null && offset != null) {
-    console.log('[Model] Executing SQL with LIMIT and OFFSET:', { limit, offset });
-    const [rows] = await pool.query(`
-      SELECT p.*, c.name AS category
-      FROM products p
-      LEFT JOIN categories c ON p.category_id = c.id
-      LIMIT ? OFFSET ?`, [limit, offset]);
-    console.log('[Model] SQL Results:', rows);
-    return rows;
-  }
-  console.log('[Model] Executing SQL without LIMIT and OFFSET');
-  const [rows] = await pool.query(`
-    SELECT p.*, c.name AS category
+// Enhanced findAllProducts function that supports filters
+export const findAllProducts = async (filters = {}) => {
+  let query = `
+    SELECT p.*, 
+           c.name AS category_name,
+           AVG(r.rating) as average_rating,
+           COUNT(r.id) as review_count
     FROM products p
-    LEFT JOIN categories c ON p.category_id = c.id`);
-  console.log('[Model] SQL Results:', rows);
+    LEFT JOIN categories c ON p.category_id = c.id
+    LEFT JOIN reviews r ON p.id = r.product_id
+    WHERE 1=1`;
+  
+  const params = [];
+
+  // Apply filters
+  if (filters.search) {
+    query += ` AND (p.name LIKE ? OR p.description LIKE ?)`;
+    const searchTerm = `%${filters.search}%`;
+    params.push(searchTerm, searchTerm);
+  }
+
+  if (filters.category) {
+    query += ` AND p.category_id = ?`;
+    params.push(filters.category);
+  }
+
+  if (filters.minPrice) {
+    query += ` AND p.price >= ?`;
+    params.push(parseFloat(filters.minPrice));
+  }
+
+  if (filters.maxPrice) {
+    query += ` AND p.price <= ?`;
+    params.push(parseFloat(filters.maxPrice));
+  }
+
+  // Group by for aggregation
+  query += ` GROUP BY p.id, c.name`;
+
+  // Sorting
+  const validSorts = {
+    'name_asc': 'p.name ASC',
+    'name_desc': 'p.name DESC',
+    'price_asc': 'p.price ASC', 
+    'price_desc': 'p.price DESC',
+    'rating_desc': 'average_rating DESC',
+    'created_desc': 'p.created_at DESC'
+  };
+  
+  if (filters.sortBy && validSorts[filters.sortBy]) {
+    query += ` ORDER BY ${validSorts[filters.sortBy]}`;
+  } else {
+    query += ` ORDER BY p.name ASC`;
+  }
+
+  // Pagination
+  if (filters.limit) {
+    query += ` LIMIT ?`;
+    params.push(parseInt(filters.limit));
+    
+    if (filters.offset) {
+      query += ` OFFSET ?`;
+      params.push(parseInt(filters.offset));
+    }
+  }
+
+  const [rows] = await pool.query(query, params);
   return rows;
 };
 
 export const findProductById = async (id) => {
   const [rows] = await pool.query(`
-    SELECT p.*, c.name AS category
+    SELECT p.*, 
+           c.name AS category_name,
+           AVG(r.rating) as average_rating,
+           COUNT(r.id) as review_count
     FROM products p
     LEFT JOIN categories c ON p.category_id = c.id
-    WHERE p.id = ?`, [id]);
+    LEFT JOIN reviews r ON p.id = r.product_id
+    WHERE p.id = ?
+    GROUP BY p.id, c.name`, [id]);
   return rows[0];
 };
 

@@ -14,6 +14,7 @@
     input[type=file]{padding:4px}
     button{margin-top:10px;padding:8px 14px;border:0;border-radius:8px;background:#238636;color:#fff;cursor:pointer}
     button.secondary{background:#30363d}
+    button:disabled{background:#21262d;color:#6e7681;cursor:not-allowed}
     .log{background:#0d1117;border:1px solid #30363d;border-radius:8px;padding:10px;max-height:300px;overflow:auto;white-space:pre-wrap}
     .pill{background:#30363d;padding:2px 6px;border-radius:999px;font-size:12px}
     .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px}
@@ -21,6 +22,36 @@
     .prod img{width:100%;height:140px;object-fit:cover;background:#111}
     .prod .p{padding:8px}
     .small{font-size:12px;opacity:.9}
+    
+    /* Modern Products Container */
+    .products-container{
+      max-height:600px;
+      overflow-y:auto;
+      border:1px solid #30363d;
+      border-radius:12px;
+      margin-top:10px;
+      padding:10px;
+      background:#0d1117;
+      position:relative;
+    }
+    .products-container::-webkit-scrollbar{width:8px}
+    .products-container::-webkit-scrollbar-track{background:#161b22;border-radius:4px}
+    .products-container::-webkit-scrollbar-thumb{background:#30363d;border-radius:4px}
+    .products-container::-webkit-scrollbar-thumb:hover{background:#484f58}
+    
+    .status-text{font-size:14px;margin:10px 0}
+    .loading-text{color:#238636}
+    .error-text{color:#f85149}
+    .info-text{color:#79c0ff}
+    
+    /* Smooth loading animation */
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .prod {
+      animation: fadeIn 0.3s ease-out;
+    }
   </style>
 </head>
 <body>
@@ -31,24 +62,25 @@
   <label>Base URL</label><input id="baseUrl" value="http://localhost:5000"/>
   <div>Token: <span id="token" class="pill">—</span> <button id="clearToken" class="secondary">נקה</button></div>
   <button id="pingBtn" class="secondary">בדיקת GET /api/products</button>
+  <button id="whoAmIBtn" class="secondary">Who Am I?</button>
 </div>
 
 <div class="row">
   <div class="card">
     <h2>Auth</h2>
     <label>Email</label><input id="email" value="admin@example.com"/>
-    <label>Password</label><input id="password" type="password" value="Admin1234!"/>
+    <label>Password</label><input id="password" type="password" value="admin123"/>
     <button id="loginBtn">Login</button>
     <label style="margin-top:12px">רישום מהיר</label>
-    <input id="regName" placeholder="Demo User"/>
-    <input id="regEmail" placeholder="demo@example.com"/>
-    <input id="regPass" type="password" placeholder="Demo1234!"/>
+    <input id="regName" placeholder="Test User"/>
+    <input id="regEmail" placeholder="test@example.com"/>
+    <input id="regPass" type="password" placeholder="test123"/>
     <button id="registerBtn" class="secondary">Register</button>
   </div>
 
   <div class="card">
     <h2>Categories</h2>
-    <label>Name</label><input id="catName" placeholder="Electronics"/>
+    <label>Name</label><input id="catName" placeholder="Home & Garden"/>
     <button id="createCatBtn">Create Category</button>
     <button id="getCatsBtn" class="secondary">Get Categories</button>
     <div id="catsList" class="small" style="margin-top:8px"></div>
@@ -56,25 +88,34 @@
 
   <div class="card">
     <h2>Products</h2>
-    <label>Name</label><input id="pName" value="Wireless Mouse"/>
-    <label>Description</label><input id="pDesc" value="Bluetooth mouse with long battery life"/>
-    <label>Price</label><input id="pPrice" value="79.90"/>
-    <label>Stock</label><input id="pStock" value="100"/>
-    <label>Category ID</label><input id="pCatId" value="1"/>
+    <label>Name</label><input id="pName" value="Smart Desk Lamp"/>
+    <label>Description</label><input id="pDesc" value="LED desk lamp with wireless charging base"/>
+    <label>Price</label><input id="pPrice" value="149.99"/>
+    <label>Stock</label><input id="pStock" value="25"/>
+    <label>Category ID</label><input id="pCatId" value="4"/>
     <label>Image</label><input id="pImage" type="file" accept="image/*"/>
     <button id="createProdBtn">Create Product</button>
     <button id="getProdsBtn" class="secondary">Get Products</button>
-    <div id="prods" class="grid" style="margin-top:10px"></div>
+    <button id="loadMoreBtn" class="secondary" style="display:none">Load More Products</button>
+    <div class="products-container">
+      <div id="prods" class="grid"></div>
+      <div id="productsStatus" class="status-text" style="text-align:center; margin:10px 0; color:#666;"></div>
+    </div>
   </div>
 
   <div class="card">
-    <h2>Update/Delete Product</h2>
-    <label>productId</label><input id="uProdId"/>
-    <label>new price (opt)</label><input id="uPrice" placeholder="89.90"/>
-    <label>new image (opt)</label><input id="uImage" type="file" accept="image/*"/>
+    <h2>Update Product</h2>
+    <label>Product ID</label><input id="uProdId" type="number"/>
+    <button id="previewProdBtn" style="margin-left:5px">Preview Current</button>
+    <div id="currentProductInfo" class="small" style="margin-top:5px; color:#666;"></div>
+    
+    <label>New Name (optional)</label><input id="uName" placeholder="Product name"/>
+    <label>New Description (optional)</label><input id="uDesc" placeholder="Product description"/>
+    <label>New Price (optional)</label><input id="uPrice" type="number" step="0.01" placeholder="159.99"/>
+    <label>New Stock (optional)</label><input id="uStock" type="number" placeholder="25"/>
+    <label>New Category ID (optional)</label><input id="uCategoryId" type="number" placeholder="1"/>
+    <label>New Image (optional)</label><input id="uImage" type="file" accept="image/*"/>
     <button id="updateProdBtn">Update Product</button>
-    <label style="margin-top:12px">productId למחיקה</label><input id="dProdId"/>
-    <button id="deleteProdBtn" class="secondary">Delete Product</button>
   </div>
 
   <div class="card">
@@ -97,7 +138,7 @@
     <h2>Reviews</h2>
     <label>Product ID</label><input id="revProdId"/>
     <label>Rating (1–5)</label><input id="revRating" value="5"/>
-    <label>Comment</label><textarea id="revComment"></textarea>
+    <label>Comment</label><textarea id="revComment" placeholder="Amazing product! Highly recommend."></textarea>
     <button id="addReviewBtn">Add Review</button>
     <button id="getReviewsBtn" class="secondary">Get Reviews for Product</button>
     <div id="reviewsBox" class="small" style="margin-top:8px"></div>
@@ -107,8 +148,9 @@
 
   <div class="card">
     <h2>Password Reset</h2>
-    <label>Email</label><input id="resetEmail" placeholder="example@example.com"/>
-    <label>New Password</label><input id="resetPassword" type="password" placeholder="NewPassword123!"/>
+    <label>Email</label><input id="resetEmail" placeholder="alice@example.com"/>
+    <label>Old Password</label><input id="resetOldPassword" type="password" placeholder="alice123"/>
+    <label>New Password</label><input id="resetPassword" type="password" placeholder="alice456"/>
     <button id="resetPasswordBtn">Reset Password</button>
   </div>
 
@@ -137,6 +179,37 @@
     <h2>Admin: Manage Users</h2>
     <button id="getAllUsersBtn">Get All Users</button>
     <div id="usersList" class="small" style="margin-top:10px"></div>
+    
+    <div class="field" style="margin-top:15px">
+      <label>Delete User</label>
+      <input type="number" id="deleteUserId" placeholder="User ID">
+      <button id="deleteUserBtn">Delete User</button>
+      <button id="getUserBtn" style="margin-left:5px">Preview User</button>
+      <div id="userPreview" class="small" style="margin-top:5px; color:#666;"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Admin: Manage Products</h2>
+    <div class="field">
+      <label>Delete Product</label>
+      <input type="number" id="deleteProdId" placeholder="Product ID">
+      <button id="deleteProdBtn">Delete Product</button>
+      <button id="getProductBtn" style="margin-left:5px">Preview Product</button>
+      <div id="productPreview" class="small" style="margin-top:5px; color:#666;"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Admin: Manage Orders</h2>
+    <button id="getAllOrdersBtn">Get All Orders</button>
+    <div id="ordersList" class="small" style="margin-top:10px"></div>
+  </div>
+
+  <div class="card">
+    <h2>Admin: System Statistics</h2>
+    <button id="getStatsBtn">Get System Stats</button>
+    <div id="statsResult" class="small" style="margin-top:10px"></div>
   </div>
 </div>
 
@@ -152,6 +225,14 @@ const prodsEl = document.getElementById('prods');
 const cartBox = document.getElementById('cartBox');
 const ordersBox = document.getElementById('ordersBox');
 const reviewsBox = document.getElementById('reviewsBox');
+
+// Element references for commonly used inputs
+const cartProdId = document.getElementById('cartProdId');
+const cartQty = document.getElementById('cartQty');
+const revProdId = document.getElementById('revProdId');
+const revRating = document.getElementById('revRating');
+const revComment = document.getElementById('revComment');
+const revId = document.getElementById('revId');
 
 function log(...a){ logEl.textContent = `[${new Date().toLocaleTimeString()}] ${a.join(' ')}\n` + logEl.textContent; }
 function base(){ return document.getElementById('baseUrl').value.trim().replace(/\/+$/,''); }
@@ -175,24 +256,50 @@ async function api(path, opt={}){
 
 // PING
 document.getElementById('pingBtn').onclick = async ()=>{
-  try{ const d = await api('/api/products'); log('PING OK', JSON.stringify({count: Array.isArray(d)?d.length:0})); renderProducts(Array.isArray(d)?d:[]); }
+  try{ const d = await api('/api/products'); log('PING OK', JSON.stringify({count: Array.isArray(d)?d.length:0})); renderProducts(Array.isArray(d)?d:[], true); }
   catch(e){ log('PING ERR', JSON.stringify(e)); }
+};
+
+// Who Am I
+document.getElementById('whoAmIBtn').onclick = async ()=>{
+  try{ 
+    if(!token()) return log('No token');
+    const payload = JSON.parse(atob(token().split('.')[1]));
+    log('WHO AM I', JSON.stringify(payload)); 
+  }
+  catch(e){ log('WHO AM I ERR', JSON.stringify(e)); }
 };
 
 // AUTH
 document.getElementById('loginBtn').onclick = async ()=>{
-  try{ const d=await api('/api/auth/login',{method:'POST',body:{email:email.value,password:password.value}}); setToken(d.token); log('Login OK', JSON.stringify(d)); }
+  try{ 
+    const email = document.getElementById('email');
+    const password = document.getElementById('password');
+    const d=await api('/api/auth/login',{method:'POST',body:{email:email.value,password:password.value}}); 
+    setToken(d.token); 
+    log('Login OK', JSON.stringify({user: d.user, token: d.token ? 'received' : 'missing'})); 
+  }
   catch(e){ log('Login ERR', JSON.stringify(e)); }
 };
 document.getElementById('registerBtn').onclick = async ()=>{
-  try{ const d=await api('/api/auth/register',{method:'POST',body:{name:regName.value,email:regEmail.value,password:regPass.value}}); log('Register OK', JSON.stringify(d)); }
+  try{ 
+    const regName = document.getElementById('regName');
+    const regEmail = document.getElementById('regEmail');
+    const regPass = document.getElementById('regPass');
+    const d=await api('/api/auth/register',{method:'POST',body:{name:regName.value,email:regEmail.value,password:regPass.value}}); 
+    log('Register OK', JSON.stringify(d)); 
+  }
   catch(e){ log('Register ERR', JSON.stringify(e)); }
 };
 document.getElementById('clearToken').onclick = ()=> setToken('');
 
 // CATEGORIES
 document.getElementById('createCatBtn').onclick = async ()=>{
-  try{ const d=await api('/api/categories',{method:'POST',body:{name:catName.value}}); log('Category OK', JSON.stringify(d)); }
+  try{ 
+    const catName = document.getElementById('catName');
+    const d=await api('/api/categories',{method:'POST',body:{name:catName.value}}); 
+    log('Category OK', JSON.stringify(d)); 
+  }
   catch(e){ log('Category ERR', JSON.stringify(e)); }
 };
 document.getElementById('getCatsBtn').onclick = async ()=>{
@@ -203,6 +310,13 @@ document.getElementById('getCatsBtn').onclick = async ()=>{
 // PRODUCTS
 document.getElementById('createProdBtn').onclick = async ()=>{
   try{
+    const pName = document.getElementById('pName');
+    const pDesc = document.getElementById('pDesc');
+    const pPrice = document.getElementById('pPrice');
+    const pStock = document.getElementById('pStock');
+    const pCatId = document.getElementById('pCatId');
+    const pImage = document.getElementById('pImage');
+    
     const fd=new FormData();
     fd.append('name', pName.value); fd.append('description', pDesc.value);
     fd.append('price', pPrice.value); fd.append('stock', pStock.value);
@@ -213,48 +327,228 @@ document.getElementById('createProdBtn').onclick = async ()=>{
     await getProducts();
   }catch(e){ log('Product ERR', JSON.stringify(e)); }
 };
-document.getElementById('getProdsBtn').onclick = ()=> getProducts();
-async function getProducts(){
-  try{ const d=await api('/api/products'); console.log('Products', JSON.stringify({count:d.length}), d); renderProducts(d); }
-  catch(e){ log('Products ERR', JSON.stringify(e)); }
+document.getElementById('getProdsBtn').onclick = ()=> loadProducts(true);
+document.getElementById('loadMoreBtn').onclick = ()=> loadProducts(false);
+
+// Modern Products Loading System
+let currentPage = 0;
+const productsPerPage = 12;
+let loadingProducts = false;
+let hasMoreProducts = true;
+let allLoadedProducts = [];
+
+async function getProducts() {
+  // Backward compatibility - reload all products
+  await loadProducts(true);
 }
-function renderProducts(items){
-  prodsEl.innerHTML='';
-  for(const p of items){
-    const card=document.createElement('div'); card.className='prod';
-    const url = p.imageUrl ? (base()+p.imageUrl) : '';
-    card.innerHTML = `
-      ${url?`<img src="${url}" alt="">`:'<div style="height:140px;display:flex;align-items:center;justify-content:center;color:#9fb0c3">no image</div>'}
-      <div class="p">
-        <div><strong>${p.name||''}</strong> <span class="small">#${p.id}</span></div>
-        <div class="small">${p.description||''}</div>
-        <div class="small">₪${p.price} | stock: ${p.stock}</div>
-        ${p.image_id?`<div class="small">image_id: ${p.image_id}</div>`:''}
-        <button data-id="${p.id}" class="secondary" style="margin-top:6px">Load Reviews</button>
-      </div>`;
-    card.querySelector('button').onclick = async ()=> {
-      revProdId.value = p.id;
-      await getReviewsFor(p.id);
-    };
-    prodsEl.appendChild(card);
+
+async function loadProducts(resetList = false) {
+  if (loadingProducts) return;
+  
+  try {
+    loadingProducts = true;
+    const loadMoreBtn = document.getElementById('loadMoreBtn');
+    const statusEl = document.getElementById('productsStatus');
+    
+    if (resetList) {
+      currentPage = 0;
+      allLoadedProducts = [];
+      hasMoreProducts = true;
+      document.getElementById('prods').innerHTML = '';
+      loadMoreBtn.style.display = 'none';
+    }
+    
+    // Show loading status
+    statusEl.textContent = resetList ? 'Loading products...' : 'Loading more products...';
+    statusEl.className = 'status-text loading-text';
+    if (loadMoreBtn) loadMoreBtn.disabled = true;
+    
+    const offset = currentPage * productsPerPage;
+    const url = `/api/products?limit=${productsPerPage}&offset=${offset}`;
+    
+    const products = await api(url);
+    
+    if (products.length === 0) {
+      hasMoreProducts = false;
+      statusEl.textContent = resetList ? 'No products found' : 'No more products to load';
+      statusEl.className = 'status-text info-text';
+    } else {
+      allLoadedProducts.push(...products);
+      renderProducts(products, resetList);
+      currentPage++;
+      
+      // Check if there might be more products
+      if (products.length < productsPerPage) {
+        hasMoreProducts = false;
+        statusEl.textContent = `Showing all ${allLoadedProducts.length} products`;
+        statusEl.className = 'status-text info-text';
+      } else {
+        statusEl.textContent = `Showing ${allLoadedProducts.length} products`;
+        statusEl.className = 'status-text info-text';
+        loadMoreBtn.style.display = 'inline-block';
+      }
+    }
+    
+    log(resetList ? 'Products Loaded' : 'More Products Loaded', 
+        JSON.stringify({page: currentPage, count: products.length, total: allLoadedProducts.length}));
+        
+  } catch(e) { 
+    const statusEl = document.getElementById('productsStatus');
+    statusEl.textContent = 'Error loading products';
+    statusEl.className = 'status-text error-text';
+    log('Products ERR', JSON.stringify(e)); 
+  } finally {
+    loadingProducts = false;
+    const loadMoreBtn = document.getElementById('loadMoreBtn');
+    if (loadMoreBtn) {
+      loadMoreBtn.disabled = false;
+      if (!hasMoreProducts) loadMoreBtn.style.display = 'none';
+    }
   }
 }
 
-// UPDATE / DELETE
+// Helper function to create product card with reviews functionality
+function createProductCard(p) {
+  const card = document.createElement('div'); 
+  card.className = 'prod';
+  const url = p.image_url || (p.image_id ? `${base()}/api/images/${p.image_id}` : '');
+  card.innerHTML = `
+    ${url?`<img src="${url}" alt="" loading="lazy">`:'<div style="height:140px;display:flex;align-items:center;justify-content:center;color:#9fb0c3">no image</div>'}
+    <div class="p">
+      <div><strong>${p.name||''}</strong> <span class="small">#${p.id}</span></div>
+      <div class="small">${p.description||''}</div>
+      <div class="small">₪${p.price} | stock: ${p.stock}</div>
+      ${p.category_name?`<div class="small">Category: ${p.category_name}</div>`:''}
+      ${p.average_rating?`<div class="small">Rating: ${parseFloat(p.average_rating).toFixed(1)}/5 (${p.review_count} reviews)</div>`:''}
+      <button data-id="${p.id}" class="secondary" style="margin-top:6px">Load Reviews</button>
+      <div class="reviews-container" style="display:none;margin-top:8px;max-height:200px;overflow-y:auto;border-top:1px solid #30363d;padding-top:8px"></div>
+    </div>`;
+  
+  card.querySelector('button').onclick = async ()=> {
+    const reviewsContainer = card.querySelector('.reviews-container');
+    const button = card.querySelector('button');
+    
+    // Toggle reviews visibility
+    if (reviewsContainer.style.display === 'none') {
+      button.textContent = 'Loading...';
+      button.disabled = true;
+      
+      try {
+        const reviews = await api(`/api/products/${p.id}/reviews`);
+        
+        if (reviews.length === 0) {
+          reviewsContainer.innerHTML = '<div style="color:#666;font-style:italic;font-size:12px">No reviews yet</div>';
+        } else {
+          reviewsContainer.innerHTML = reviews.map(review => `
+            <div style="border-bottom:1px solid #21262d;padding:6px 0;margin:4px 0">
+              <div style="display:flex;justify-content:between;align-items:center;margin-bottom:4px">
+                <span style="font-weight:bold;font-size:12px;color:#79c0ff">${review.user_name}</span>
+                <span style="margin-left:8px;background:#238636;padding:1px 4px;border-radius:8px;font-size:10px">★${review.rating}</span>
+              </div>
+              ${review.comment ? `<div style="font-size:11px;color:#e6edf3;line-height:1.3">"${review.comment}"</div>` : ''}
+            </div>
+          `).join('');
+        }
+        
+        reviewsContainer.style.display = 'block';
+        button.textContent = 'Hide Reviews';
+      } catch (e) {
+        reviewsContainer.innerHTML = '<div style="color:#f85149;font-size:12px">Error loading reviews</div>';
+        reviewsContainer.style.display = 'block';
+        button.textContent = 'Load Reviews';
+      }
+      
+      button.disabled = false;
+    } else {
+      reviewsContainer.style.display = 'none';
+      button.textContent = 'Load Reviews';
+    }
+    
+    // Also update the main reviews section
+    document.getElementById('revProdId').value = p.id;
+    await getReviewsFor(p.id);
+  };
+  
+  return card;
+}
+
+function renderProducts(items, resetList = false) {
+  const container = document.getElementById('prods');
+  if (resetList) {
+    container.innerHTML = '';
+  }
+  
+  for(const p of items){
+    const card = createProductCard(p);
+    container.appendChild(card);
+  }
+}
+
+// PREVIEW PRODUCT FOR UPDATE
+document.getElementById('previewProdBtn').onclick = async ()=>{
+  try{
+    const id = document.getElementById('uProdId').value.trim();
+    if(!id) {
+      document.getElementById('currentProductInfo').textContent = 'Please enter Product ID';
+      return;
+    }
+    const product = await api(`/api/products/${id}`);
+    document.getElementById('currentProductInfo').innerHTML = `
+      <strong>Current:</strong> ${product.name} | ₪${product.price} | Stock: ${product.stock} | Cat: ${product.category_id}<br>
+      <em>${product.description}</em>
+    `;
+    log('Preview for Update OK', JSON.stringify(product));
+  }catch(e){
+    document.getElementById('currentProductInfo').textContent = `Error: ${e.message || 'Product not found'}`;
+    log('Preview for Update ERR', JSON.stringify(e));
+  }
+};
+
+// UPDATE PRODUCT
 document.getElementById('updateProdBtn').onclick = async ()=>{
   try{
-    const id=uProdId.value.trim(); if(!id) return alert('productId?');
-    const fd=new FormData(); if(uPrice.value) fd.append('price',uPrice.value);
-    if(uImage.files[0]) fd.append('image',uImage.files[0]);
-    const d=await api('/api/products/'+id,{method:'PUT',body:fd});
-    log('Update OK', JSON.stringify(d)); await getProducts();
-  }catch(e){ log('Update ERR', JSON.stringify(e)); }
+    const id = document.getElementById('uProdId').value.trim();
+    if(!id) return alert('Product ID required!');
+    
+    const fd = new FormData();
+    
+    // Add fields only if they have values
+    const name = document.getElementById('uName').value.trim();
+    const desc = document.getElementById('uDesc').value.trim();
+    const price = document.getElementById('uPrice').value.trim();
+    const stock = document.getElementById('uStock').value.trim();
+    const categoryId = document.getElementById('uCategoryId').value.trim();
+    const image = document.getElementById('uImage').files[0];
+    
+    if(name) fd.append('name', name);
+    if(desc) fd.append('description', desc);
+    if(price) fd.append('price', price);
+    if(stock) fd.append('stock', stock);
+    if(categoryId) fd.append('category_id', categoryId);
+    if(image) fd.append('image', image);
+    
+    if(fd.entries().next().done) {
+      return alert('Please enter at least one field to update!');
+    }
+    
+    log('Update Request', `Updating product ${id} with fields`);
+    const d = await api('/api/products/'+id, {method:'PUT', body:fd});
+    log('Update OK', JSON.stringify(d));
+    
+    // Clear form and refresh
+    ['uName', 'uDesc', 'uPrice', 'uStock', 'uCategoryId', 'uImage'].forEach(id => {
+      const el = document.getElementById(id);
+      if(el.type === 'file') el.value = '';
+      else el.value = '';
+    });
+    document.getElementById('currentProductInfo').textContent = '';
+    
+    await getProducts();
+  }catch(e){ 
+    log('Update ERR', JSON.stringify(e)); 
+  }
 };
-document.getElementById('deleteProdBtn').onclick = async ()=>{
-  try{ const id=dProdId.value.trim(); if(!id) return alert('productId?');
-    const d=await api('/api/products/'+id,{method:'DELETE'}); log('Delete OK', JSON.stringify(d)); await getProducts();
-  }catch(e){ log('Delete ERR', JSON.stringify(e)); }
-};
+// OLD DELETE BUTTON HANDLER REMOVED - using new one below
 
 // CART
 document.getElementById('addCartBtn').onclick = async ()=>{
@@ -291,9 +585,34 @@ document.getElementById('getReviewsBtn').onclick = async ()=>{
 async function getReviewsFor(pid){
   try{
     const d=await api(`/api/products/${pid}/reviews`);
-    reviewsBox.textContent = JSON.stringify(d,null,2);
+    
+    // Display reviews in a beautiful format
+    if (d.length === 0) {
+      reviewsBox.innerHTML = '<div style="color:#666;font-style:italic">No reviews found for this product</div>';
+    } else {
+      reviewsBox.innerHTML = d.map(review => `
+        <div style="border:1px solid #30363d;border-radius:8px;padding:12px;margin:8px 0;background:#161b22">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+            <div>
+              <strong style="color:#79c0ff">${review.user_name || 'Anonymous'}</strong>
+              <span style="margin-left:10px;background:#238636;padding:2px 6px;border-radius:12px;font-size:12px">
+                ★ ${review.rating}/5
+              </span>
+            </div>
+            <div style="font-size:12px;color:#666">
+              ${new Date(review.created_at).toLocaleDateString('he-IL')}
+            </div>
+          </div>
+          ${review.comment ? `<div style="color:#e6edf3;line-height:1.4">"${review.comment}"</div>` : ''}
+        </div>
+      `).join('');
+    }
+    
     log('Reviews', JSON.stringify({productId:pid, count:d.length}));
-  }catch(e){ log('Reviews ERR', JSON.stringify(e)); }
+  }catch(e){ 
+    reviewsBox.innerHTML = '<div style="color:#f85149">Error loading reviews</div>';
+    log('Reviews ERR', JSON.stringify(e)); 
+  }
 }
 
 document.getElementById('updateReviewBtn').onclick = async () => {
@@ -314,8 +633,9 @@ const resetPasswordBtn = document.getElementById('resetPasswordBtn');
 resetPasswordBtn.onclick = async () => {
   try {
     const email = document.getElementById('resetEmail').value;
+    const oldPassword = document.getElementById('resetOldPassword').value;
     const newPassword = document.getElementById('resetPassword').value;
-    const d = await api('/api/auth/reset-password', { method: 'POST', body: { email, newPassword } });
+    const d = await api('/api/auth/reset-password', { method: 'POST', body: { email, oldPassword, newPassword } });
     log('Password Reset OK', JSON.stringify(d));
   } catch (e) {
     log('Password Reset ERR', JSON.stringify(e));
@@ -328,21 +648,38 @@ searchProductsBtn.onclick = async () => {
   try {
     const query = document.getElementById('searchQuery').value;
     const categoryId = document.getElementById('searchCategoryId').value;
-    const d = await api(`/api/products/search?query=${query}&categoryId=${categoryId}`);
-    renderProducts(d, 'searchResults');
-    log('Search Products OK', JSON.stringify(d));
+    
+    let apiUrl = '/api/products?';
+    if (query) apiUrl += `search=${encodeURIComponent(query)}&`;
+    if (categoryId) apiUrl += `category=${categoryId}&`;
+    
+    const d = await api(apiUrl);
+    // Clear and populate search results container
+    const searchContainer = document.getElementById('searchResults');
+    searchContainer.innerHTML = '';
+    for(const p of d){
+      const card = createProductCard(p);
+      searchContainer.appendChild(card);
+    }
+    log('Search Products OK', JSON.stringify({count: d.length}));
   } catch (e) {
     log('Search Products ERR', JSON.stringify(e));
   }
 };
 
-// Recommended Products
+// Recommended Products (top rated)
 const recommendProductsBtn = document.getElementById('recommendProductsBtn');
 recommendProductsBtn.onclick = async () => {
   try {
-    const d = await api('/api/products/recommend');
-    renderProducts(d, 'recommendResults');
-    log('Recommended Products OK', JSON.stringify(d));
+    const d = await api('/api/products?sortBy=rating_desc&limit=10');
+    // Clear and populate recommendations container
+    const recommendContainer = document.getElementById('recommendResults');
+    recommendContainer.innerHTML = '';
+    for(const p of d){
+      const card = createProductCard(p);
+      recommendContainer.appendChild(card);
+    }
+    log('Recommended Products OK', JSON.stringify({count: d.length}));
   } catch (e) {
     log('Recommended Products ERR', JSON.stringify(e));
   }
@@ -353,9 +690,11 @@ const getAvgRatingBtn = document.getElementById('getAvgRatingBtn');
 getAvgRatingBtn.onclick = async () => {
   try {
     const productId = document.getElementById('avgRatingProdId').value;
-    const d = await api(`/api/products/${productId}/average-rating`);
-    document.getElementById('avgRatingResult').textContent = `Average Rating: ${d.average}`;
-    log('Average Rating OK', JSON.stringify(d));
+    const d = await api(`/api/products/${productId}`);
+    const avgRating = d.average_rating ? parseFloat(d.average_rating).toFixed(1) : 'No ratings';
+    const reviewCount = d.review_count || 0;
+    document.getElementById('avgRatingResult').textContent = `Average Rating: ${avgRating}/5 (${reviewCount} reviews)`;
+    log('Average Rating OK', JSON.stringify({productId, avgRating, reviewCount}));
   } catch (e) {
     log('Average Rating ERR', JSON.stringify(e));
   }
@@ -373,24 +712,131 @@ getAllUsersBtn.onclick = async () => {
   }
 };
 
-// Helper to render products
-function renderProducts(items, containerId) {
-  const container = document.getElementById(containerId);
-  container.innerHTML = '';
-  for (const p of items) {
-    const card = document.createElement('div');
-    card.className = 'prod';
-    const url = p.imageUrl ? base() + p.imageUrl : '';
-    card.innerHTML = `
-      ${url ? `<img src="${url}" alt="">` : '<div style="height:140px;display:flex;align-items:center;justify-content:center;color:#9fb0c3">no image</div>'}
-      <div class="p">
-        <div><strong>${p.name || ''}</strong> <span class="small">#${p.id}</span></div>
-        <div class="small">${p.description || ''}</div>
-        <div class="small">₪${p.price} | stock: ${p.stock}</div>
-      </div>`;
-    container.appendChild(card);
+// Admin: Delete User
+const deleteUserBtn = document.getElementById('deleteUserBtn');
+deleteUserBtn.onclick = async () => {
+  try {
+    const userId = document.getElementById('deleteUserId').value;
+    console.log('🗑️ Client: Attempting to delete user with ID:', userId);
+    
+    if (!userId) {
+      log('Delete User ERR', 'Please enter User ID');
+      return;
+    }
+    
+    log('Delete User Request', `Sending DELETE request for user ID: ${userId}`);
+    const d = await api(`/api/users/${userId}`, {method: 'DELETE'});
+    log('Delete User OK', JSON.stringify(d));
+    
+    // Clear the input field on success
+    document.getElementById('deleteUserId').value = '';
+    document.getElementById('userPreview').textContent = '';
+  } catch (e) {
+    console.error('🗑️ Client: Delete user error:', e);
+    log('Delete User ERR', JSON.stringify(e));
   }
-}
+};
+
+// Preview User before delete
+const getUserBtn = document.getElementById('getUserBtn');
+getUserBtn.onclick = async () => {
+  try {
+    const userId = document.getElementById('deleteUserId').value;
+    if (!userId) {
+      document.getElementById('userPreview').textContent = 'Please enter User ID';
+      return;
+    }
+    
+    const user = await api(`/api/users/${userId}`);
+    document.getElementById('userPreview').textContent = `User: ${user.name} (${user.email}) - Role: ${user.role}`;
+    log('Preview User OK', JSON.stringify(user));
+  } catch (e) {
+    document.getElementById('userPreview').textContent = `Error: ${e.message || 'User not found'}`;
+    log('Preview User ERR', JSON.stringify(e));
+  }
+};
+
+// Admin: Delete Product
+const deleteProdBtn = document.getElementById('deleteProdBtn');
+deleteProdBtn.onclick = async () => {
+  try {
+    const productId = document.getElementById('deleteProdId').value;
+    console.log('🗑️ Client: Attempting to delete product with ID:', productId);
+    
+    if (!productId) {
+      log('Delete Product ERR', 'Please enter Product ID');
+      return;
+    }
+    
+    log('Delete Product Request', `Sending DELETE request for product ID: ${productId}`);
+    const d = await api(`/api/products/${productId}`, {method: 'DELETE'});
+    log('Delete Product OK', JSON.stringify(d));
+    
+    // Clear the input field and refresh products list on success
+    document.getElementById('deleteProdId').value = '';
+    document.getElementById('productPreview').textContent = '';
+    await getProducts();
+  } catch (e) {
+    console.error('🗑️ Client: Delete product error:', e);
+    log('Delete Product ERR', JSON.stringify(e));
+  }
+};
+
+// Preview Product before delete
+const getProductBtn = document.getElementById('getProductBtn');
+getProductBtn.onclick = async () => {
+  try {
+    const productId = document.getElementById('deleteProdId').value;
+    if (!productId) {
+      document.getElementById('productPreview').textContent = 'Please enter Product ID';
+      return;
+    }
+    
+    const product = await api(`/api/products/${productId}`);
+    document.getElementById('productPreview').textContent = `Product: ${product.name} - Price: ₪${product.price} - Stock: ${product.stock}`;
+    log('Preview Product OK', JSON.stringify(product));
+  } catch (e) {
+    document.getElementById('productPreview').textContent = `Error: ${e.message || 'Product not found'}`;
+    log('Preview Product ERR', JSON.stringify(e));
+  }
+};
+
+// Admin: Get All Orders
+const getAllOrdersBtn = document.getElementById('getAllOrdersBtn');
+getAllOrdersBtn.onclick = async () => {
+  try {
+    const d = await api('/api/orders/all/admin');
+    document.getElementById('ordersList').textContent = JSON.stringify(d, null, 2);
+    log('Get All Orders OK', JSON.stringify({count: d.length}));
+  } catch (e) {
+    log('Get All Orders ERR', JSON.stringify(e));
+  }
+};
+
+// Admin: System Statistics
+const getStatsBtn = document.getElementById('getStatsBtn');
+getStatsBtn.onclick = async () => {
+  try {
+    const [users, products, orders] = await Promise.all([
+      api('/api/users'),
+      api('/api/products'),
+      api('/api/orders/all/admin')
+    ]);
+    
+    const stats = {
+      totalUsers: users.length,
+      totalProducts: products.length,
+      totalOrders: orders.length,
+      totalRevenue: orders.reduce((sum, order) => sum + parseFloat(order.total_amount || 0), 0).toFixed(2)
+    };
+    
+    document.getElementById('statsResult').textContent = JSON.stringify(stats, null, 2);
+    log('System Stats OK', JSON.stringify(stats));
+  } catch (e) {
+    log('System Stats ERR', JSON.stringify(e));
+  }
+};
+
 </script>
 </body>
 </html>

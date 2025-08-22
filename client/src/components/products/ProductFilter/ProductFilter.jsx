@@ -67,45 +67,6 @@ const ProductFilter = ({ isLoading }) => {
       </div>
 
       <div className="filter-content">
-        {/* Categories Filter */}
-        <div className="filter-section">
-          <h4>Categories</h4>
-          {loadingCategories ? (
-            <div className="filter-loading">Loading categories...</div>
-          ) : (
-            <div className="category-list">
-              {categories.map(category => (
-                <label key={category.id} className="category-item">
-                  <input
-                    type="radio"
-                    name="category"
-                    checked={filters.categories?.includes(category.id) || false}
-                    onChange={() => handleFilterChange('category', category.id)}
-                    disabled={isLoading}
-                  />
-                  <span className="radio-custom"></span>
-                  <span className="category-name">{category.name}</span>
-                </label>
-              ))}
-              {/* All Categories option */}
-              <label className="category-item">
-                <input
-                  type="radio"
-                  name="category"
-                  checked={!filters.categories?.length}
-                  onChange={() => handleFilterChange('category', null)}
-                  disabled={isLoading}
-                />
-                <span className="radio-custom"></span>
-                <span className="category-name">All Categories</span>
-              </label>
-              {categories.length === 0 && !loadingCategories && (
-                <p className="no-categories">No categories available</p>
-              )}
-            </div>
-          )}
-        </div>
-
         {/* Price Range Filter */}
         <div className="filter-section">
           <h4>Price Range</h4>

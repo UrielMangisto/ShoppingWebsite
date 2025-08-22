@@ -9,7 +9,7 @@ import './CheckoutPage.css';
 const CheckoutPage = () => {
   const navigate = useNavigate();
   const { items, totalAmount, totalItems, clearCart } = useCart();
-  const { isAuthenticated, user } = useAuth();
+  const { isAuthenticated, user, loading } = useAuth();
   
   const [isProcessing, setIsProcessing] = useState(false);
   const [orderError, setOrderError] = useState(null);
@@ -22,12 +22,12 @@ const CheckoutPage = () => {
     country: ''
   });
 
-  // Redirect if not authenticated
+  // Redirect if not authenticated (but only after loading is complete)
   useEffect(() => {
-    if (!isAuthenticated) {
+    if (!loading && !isAuthenticated) {
       navigate('/login', { state: { from: { pathname: '/checkout' } } });
     }
-  }, [isAuthenticated, navigate]);
+  }, [loading, isAuthenticated, navigate]);
 
   // Redirect if cart is empty
   useEffect(() => {
@@ -272,6 +272,40 @@ const CheckoutPage = () => {
                 </div>
               </div>
             </div>
+
+            {/* Place Order Section */}
+            <div className="checkout-section place-order-section">
+              <h3>Complete Your Order</h3>
+              
+              {orderError && (
+                <div className="error-message">
+                  <span className="error-icon">⚠️</span>
+                  {orderError}
+                </div>
+              )}
+
+              <div className="place-order-actions">
+                <button 
+                  className="btn btn-primary btn-full btn-large" 
+                  onClick={handlePlaceOrder}
+                  disabled={isProcessing}
+                >
+                  {isProcessing ? (
+                    <>
+                      <div className="button-spinner"></div>
+                      Processing Order...
+                    </>
+                  ) : (
+                    'Place Order'
+                  )}
+                </button>
+                
+                <div className="security-note">
+                  <div className="security-icon">🔒</div>
+                  <p>Your information is secure and encrypted</p>
+                </div>
+              </div>
+            </div>
           </div>
 
           {/* Order Total Sidebar */}
@@ -309,37 +343,10 @@ const CheckoutPage = () => {
                 </div>
               )}
 
-              {orderError && (
-                <div className="error-message">
-                  <span className="error-icon">⚠️</span>
-                  {orderError}
-                </div>
-              )}
-
-              <div className="checkout-actions">
-                <button 
-                  className="btn btn-primary btn-full btn-large" 
-                  onClick={handlePlaceOrder}
-                  disabled={isProcessing}
-                >
-                  {isProcessing ? (
-                    <>
-                      <div className="button-spinner"></div>
-                      Processing Order...
-                    </>
-                  ) : (
-                    'Place Order'
-                  )}
-                </button>
-                
+              <div className="sidebar-actions">
                 <Link to="/cart" className="btn btn-secondary btn-full">
                   Back to Cart
                 </Link>
-              </div>
-
-              <div className="security-note">
-                <div className="security-icon">🔒</div>
-                <p>Your information is secure and encrypted</p>
               </div>
 
               <div className="accepted-payments">

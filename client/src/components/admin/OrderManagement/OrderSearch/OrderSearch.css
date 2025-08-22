@@ -1,0 +1,21 @@
+.order-search-controls {
+  margin-bottom: 2rem;
+}
+
+.search-section {
+  max-width: 600px;
+}
+
+.search-input {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 2px solid #e9ecef;
+  border-radius: 8px;
+  font-size: 1rem;
+  transition: border-color 0.3s;
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: #4a90e2;
+}

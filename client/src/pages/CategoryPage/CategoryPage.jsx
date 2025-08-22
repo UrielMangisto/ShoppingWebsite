@@ -181,6 +181,7 @@ const CategoryPage = () => {
           <div className="cat-filters-section">
             <h3>Filters</h3>
             <div className="cat-filter-group">
+              
               <label>Price Range</label>
               <div className="cat-price-inputs">
                 <input
@@ -203,6 +204,7 @@ const CategoryPage = () => {
                 </button>
               </div>
             </div>
+            
             <button onClick={handleClearFilters} className="cat-btn cat-btn-sm cat-btn-outline">
               Clear Filters
             </button>

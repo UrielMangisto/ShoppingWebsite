@@ -22,6 +22,8 @@ import LoginPage from './pages/auth/LoginPage/LoginPage';
 import RegisterPage from './pages/auth/RegisterPage/RegisterPage';
 import ProfilePage from './pages/ProfilePage/ProfilePage';
 import OrderDetailPage from './pages/OrderDetailPage/OrderDetailPage';
+import ResetPasswordPage from './pages/auth/ResetPasswordPage/ResetPasswordPage';
+
 
 function App() {
   return (
@@ -42,7 +44,7 @@ function App() {
                   <Route path="/login" element={<LoginPage />} />
                   <Route path="/register" element={<RegisterPage />} />
                   <Route path="/profile" element={<ProfilePage />} />
-                  
+                  <Route path="/reset-password" element={<ResetPasswordPage />} />
                   {/* Category Routes */}
                   <Route path="/categories" element={<CategoriesPage />} />
                   <Route path="/category/:categorySlug" element={<CategoryPage />} />

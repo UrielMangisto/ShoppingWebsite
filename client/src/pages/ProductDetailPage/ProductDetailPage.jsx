@@ -6,6 +6,7 @@ import { useCart } from '../../context/CartContext';
 import { useAuth } from '../../context/AuthContext';
 import { useReviews } from '../../hooks/useReviews';
 import ProductRecommendations from '../../components/products/ProductRecommendations/ProductRecommendations';
+import ReviewForm from '../../components/products/ReviewForm/ReviewForm';
 import './ProductDetailPage.css';
 
 const ProductDetailPage = () => {
@@ -13,8 +14,8 @@ const ProductDetailPage = () => {
   const navigate = useNavigate();
   const { currentProduct, loading, error, fetchProduct } = useProducts();
   const { addToCart, loading: cartLoading } = useCart();
-  const { isAuthenticated } = useAuth();
-  const { reviews, loading: reviewsLoading } = useReviews(id);
+  const { isAuthenticated, user } = useAuth();
+  const { reviews, loading: reviewsLoading, addReview, updateReview, deleteReview } = useReviews(id);
   
   const [quantity, setQuantity] = useState(1);
   const [activeTab, setActiveTab] = useState('description');
@@ -133,8 +134,11 @@ const ProductDetailPage = () => {
     );
   }
 
-  const averageRating = currentProduct.average_rating ? parseFloat(currentProduct.average_rating) : 0;
-  const reviewCount = parseInt(currentProduct.review_count) || 0;
+  // Calculate average rating and count from actual reviews data for real-time updates
+  const reviewCount = reviews.length;
+  const averageRating = reviewCount > 0 
+    ? reviews.reduce((sum, review) => sum + review.rating, 0) / reviewCount 
+    : (currentProduct.average_rating ? parseFloat(currentProduct.average_rating) : 0);
   const isInStock = currentProduct.stock > 0;
 
   return (
@@ -338,6 +342,30 @@ const ProductDetailPage = () => {
                     </div>
                   )}
                 </div>
+
+                {/* Review Form */}
+                <ReviewForm
+                  productId={id}
+                  onReviewAdded={async (reviewData) => {
+                    const result = await addReview(reviewData);
+                    if (result.success) {
+                      console.log('Review added successfully');
+                    }
+                    return result;
+                  }}
+                  existingReview={user ? reviews.find(r => r.user_id === user.id) : null}
+                  onReviewUpdated={async (reviewData) => {
+                    const existingReview = reviews.find(r => r.user_id === user.id);
+                    if (existingReview) {
+                      const result = await updateReview(existingReview.id, reviewData);
+                      if (result.success) {
+                        console.log('Review updated successfully');
+                      }
+                      return result;
+                    }
+                    return { success: false, error: 'Review not found' };
+                  }}
+                />
               </div>
             )}
           </div>

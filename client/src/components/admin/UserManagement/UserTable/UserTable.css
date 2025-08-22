@@ -1,0 +1,110 @@
+.users-table-container {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  overflow: auto;
+}
+
+.users-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.users-table th,
+.users-table td {
+  padding: 1rem;
+  text-align: left;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.users-table th {
+  background: #f8f9fa;
+  font-weight: 600;
+  color: #333;
+}
+
+.user-name-cell {
+  display: flex;
+  flex-direction: column;
+}
+
+.user-name-cell strong {
+  margin-bottom: 0.25rem;
+}
+
+.user-name-cell span {
+  font-size: 0.875rem;
+  color: #666;
+}
+
+.email-cell {
+  color: #2563eb;
+}
+
+.role-badge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.875rem;
+}
+
+.role-badge.admin {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.role-badge.user {
+  background: #e0e7ff;
+  color: #3730a3;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.edituser {
+  background-color: #3b82f6;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  font-size: 0.875rem;
+  transition: background-color 0.2s;
+  border-radius: 10%;
+}
+
+.edituser:hover:not(:disabled) {
+  background-color: #2563eb;
+}
+
+.edituser:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.deleteuser {
+  background-color: #ef4444;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  font-size: 0.875rem;
+  transition: background-color 0.2s;
+  border-radius: 10%;
+}
+
+.deleteuser:hover:not(:disabled) {
+  background-color: #dc2626;
+}
+
+.deleteuser:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.no-data {
+  text-align: center;
+  color: #666;
+  padding: 2rem !important;
+}

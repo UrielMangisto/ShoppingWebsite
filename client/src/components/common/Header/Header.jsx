@@ -17,6 +17,7 @@ const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
   const [isCategoriesOpen, setIsCategoriesOpen] = useState(false);
+  const [isMobileCategoriesOpen, setIsMobileCategoriesOpen] = useState(false);
   const profileDropdownRef = useRef(null);
   const categoriesDropdownRef = useRef(null);
 
@@ -41,12 +42,14 @@ const Header = () => {
   useEffect(() => {
     setIsMenuOpen(false);
     setIsCategoriesOpen(false);
+    setIsMobileCategoriesOpen(false);
     setIsProfileDropdownOpen(false);
   }, [location]);
 
   // Handle category selection - Navigate to individual category page
   const handleCategoryClick = (categoryId, categoryName) => {
     setIsCategoriesOpen(false);
+    setIsMobileCategoriesOpen(false);
     // Navigate to individual category page: /category/electronics
     const categorySlug = categoryName.toLowerCase().replace(/\s+/g, '-');
     navigate(`/category/${categorySlug}`, { 
@@ -57,6 +60,7 @@ const Header = () => {
   // Handle all categories click
   const handleAllCategoriesClick = () => {
     setIsCategoriesOpen(false);
+    setIsMobileCategoriesOpen(false);
     navigate('/categories');
   };
 
@@ -83,71 +87,71 @@ const Header = () => {
   };
 
   return (
-    <header className="header">
-      <div className="header-container">
+    <header className="main-header">
+      <div className="main-header-container">
         {/* Logo */}
-        <div className="header-logo">
-          <Link to="/" className="logo-link">
-            <div className="logo">
-              <span className="logo-icon">🛍️</span>
-              <span className="logo-text">ShopEasy</span>
+        <div className="main-header-logo">
+          <Link to="/" className="main-logo-link">
+            <div className="main-logo">
+              <span className="main-logo-icon">🛍️</span>
+              <span className="main-logo-text">ShopEasy</span>
             </div>
           </Link>
         </div>
 
         {/* Search Bar - Desktop */}
-        <div className="header-search">
+        <div className="main-header-search">
           <GlobalSearch />
         </div>
 
         {/* Desktop Navigation */}
-        <nav className="header-nav desktop-nav">
+        <nav className="main-header-nav main-desktop-nav">
           <Link 
             to="/" 
-            className={`nav-link ${location.pathname === '/' ? 'active' : ''}`}
+            className={`main-nav-link ${location.pathname === '/' ? 'active' : ''}`}
           >
             Home
           </Link>
           
           {/* Categories Dropdown - CLICK ONLY */}
           <div 
-            className="categories-dropdown" 
+            className="main-categories-dropdown" 
             ref={categoriesDropdownRef}
           >
             <button
               onClick={toggleCategoriesDropdown}
-              className="categories-trigger"
+              className="main-categories-trigger"
               aria-expanded={isCategoriesOpen}
               aria-haspopup="true"
             >
               Categories
-              <span className={`dropdown-arrow ${isCategoriesOpen ? 'open' : ''}`}>
+              <span className={`main-dropdown-arrow ${isCategoriesOpen ? 'open' : ''}`}>
                 ▼
               </span>
             </button>
 
             {isCategoriesOpen && (
-              <div className="categories-menu">
-                <div className="categories-header">
+              <div className="main-categories-menu">
+                <div className="main-categories-header">
                   <h3>Shop by Category</h3>
                 </div>
                 
-                <div className="categories-list">
+                <div className="main-categories-list">
                   <button
                     onClick={handleAllCategoriesClick}
-                    className="category-item all-categories"
+                    className="main-category-item main-all-categories"
                   >
-                    <span className="category-icon">🛍️</span>
-                    <span className="category-name">All Categories</span>
+                    <span className="main-category-icon">🛍️</span>
+                    <span className="main-category-name">All Categories</span>
                   </button>
                   
                   {categoriesLoading ? (
-                    <div className="categories-loading">
-                      <div className="mini-spinner"></div>
+                    <div className="main-categories-loading">
+                      <div className="main-mini-spinner"></div>
                       <span>Loading categories...</span>
                     </div>
                   ) : categories.length === 0 ? (
-                    <div className="no-categories">
+                    <div className="main-no-categories">
                       <span>No categories available</span>
                     </div>
                   ) : (
@@ -155,10 +159,10 @@ const Header = () => {
                       <button
                         key={category.id}
                         onClick={() => handleCategoryClick(category.id, category.name)}
-                        className="category-item"
+                        className="main-category-item"
                       >
-                        <span className="category-icon">📱</span>
-                        <span className="category-name">{category.name}</span>
+                        <span className="main-category-icon">📱</span>
+                        <span className="main-category-name">{category.name}</span>
                       </button>
                     ))
                   )}
@@ -169,7 +173,7 @@ const Header = () => {
           
           <Link 
             to="/products" 
-            className={`nav-link ${location.pathname === '/products' ? 'active' : ''}`}
+            className={`main-nav-link ${location.pathname === '/products' ? 'active' : ''}`}
           >
             Products
           </Link>
@@ -177,78 +181,78 @@ const Header = () => {
           {isAuthenticated ? (
             <>
               {/* Cart Link */}
-              <Link to="/cart" className="cart-link">
-                <span className="cart-icon">🛒</span>
+              <Link to="/cart" className="main-cart-link">
+                <span className="main-cart-icon">🛒</span>
                 {totalItems > 0 && (
-                  <span className="cart-badge">{totalItems}</span>
+                  <span className="main-cart-badge">{totalItems}</span>
                 )}
               </Link>
 
               {/* Profile Dropdown */}
-              <div className="profile-dropdown" ref={profileDropdownRef}>
+              <div className="main-profile-dropdown" ref={profileDropdownRef}>
                 <button 
                   onClick={toggleProfileDropdown}
-                  className="profile-button"
+                  className="main-profile-button"
                   aria-expanded={isProfileDropdownOpen}
                   aria-haspopup="true"
                 >
-                  <div className="profile-avatar">
+                  <div className="main-profile-avatar">
                     {user?.name ? user.name.charAt(0).toUpperCase() : 'U'}
                   </div>
-                  <span className="profile-name">{user?.name || 'User'}</span>
-                  <span className={`dropdown-arrow ${isProfileDropdownOpen ? 'open' : ''}`}>
+                  <span className="main-profile-name">{user?.name || 'User'}</span>
+                  <span className={`main-dropdown-arrow ${isProfileDropdownOpen ? 'open' : ''}`}>
                     ▼
                   </span>
                 </button>
 
                 {isProfileDropdownOpen && (
-                  <div className="dropdown-menu">
-                    <div className="dropdown-header">
-                      <div className="user-info">
-                        <div className="user-name">{user?.name || 'User'}</div>
-                        <div className="user-email">{user?.email}</div>
-                        <div className="user-role">
-                          <span className={`role-badge ${user?.role}`}>
+                  <div className="main-dropdown-menu">
+                    <div className="main-dropdown-header">
+                      <div className="main-user-info">
+                        <div className="main-user-name">{user?.name || 'User'}</div>
+                        <div className="main-user-email">{user?.email}</div>
+                        <div className="main-user-role">
+                          <span className={`main-role-badge ${user?.role}`}>
                             {user?.role === 'admin' ? 'Administrator' : 'Customer'}
                           </span>
                         </div>
                       </div>
                     </div>
                     
-                    <div className="dropdown-divider"></div>
+                    <div className="main-dropdown-divider"></div>
                     
-                    <Link to="/profile" className="dropdown-item">
-                      <span className="item-icon">👤</span>
+                    <Link to="/profile" className="main-dropdown-item">
+                      <span className="main-item-icon">👤</span>
                       My Profile
                     </Link>
                     
-                    <Link to="/profile" className="dropdown-item">
-                      <span className="item-icon">📦</span>
+                    <Link to="/profile" className="main-dropdown-item">
+                      <span className="main-item-icon">📦</span>
                       My Orders
                     </Link>
                     
-                    <Link to="/cart" className="dropdown-item">
-                      <span className="item-icon">🛒</span>
+                    <Link to="/cart" className="main-dropdown-item">
+                      <span className="main-item-icon">🛒</span>
                       Shopping Cart
                       {totalItems > 0 && (
-                        <span className="item-badge">{totalItems}</span>
+                        <span className="main-item-badge">{totalItems}</span>
                       )}
                     </Link>
                     
                     {isAdmin() && (
                       <>
-                        <div className="dropdown-divider"></div>
-                        <Link to="/admin" className="dropdown-item admin-item">
-                          <span className="item-icon">⚙️</span>
+                        <div className="main-dropdown-divider"></div>
+                        <Link to="/admin" className="main-dropdown-item main-admin-item">
+                          <span className="main-item-icon">⚙️</span>
                           Admin Panel
                         </Link>
                       </>
                     )}
                     
-                    <div className="dropdown-divider"></div>
+                    <div className="main-dropdown-divider"></div>
                     
-                    <button onClick={handleLogout} className="dropdown-item logout-item">
-                      <span className="item-icon">🚪</span>
+                    <button onClick={handleLogout} className="main-dropdown-item main-logout-item">
+                      <span className="main-item-icon">🚪</span>
                       Logout
                     </button>
                   </div>
@@ -257,10 +261,10 @@ const Header = () => {
             </>
           ) : (
             <>
-              <Link to="/login" className="nav-link login-link">
+              <Link to="/login" className="main-nav-link main-login-link">
                 Login
               </Link>
-              <Link to="/register" className="nav-link register-link">
+              <Link to="/register" className="main-nav-link main-register-link">
                 Register
               </Link>
             </>
@@ -269,12 +273,12 @@ const Header = () => {
 
         {/* Mobile Menu Button */}
         <button 
-          className="mobile-menu-button"
+          className="main-mobile-menu-button"
           onClick={toggleMenu}
           aria-label="Toggle menu"
           aria-expanded={isMenuOpen}
         >
-          <span className={`hamburger ${isMenuOpen ? 'open' : ''}`}>
+          <span className={`main-hamburger ${isMenuOpen ? 'open' : ''}`}>
             <span></span>
             <span></span>
             <span></span>
@@ -283,96 +287,106 @@ const Header = () => {
       </div>
 
       {/* Mobile Navigation */}
-      <div className={`mobile-nav ${isMenuOpen ? 'open' : ''}`}>
-        <div className="mobile-nav-content">
+      <div className={`main-mobile-nav ${isMenuOpen ? 'open' : ''}`}>
+        <div className="main-mobile-nav-content">
           {/* Mobile Search */}
-          <div className="mobile-search">
+          <div className="main-mobile-search">
             <GlobalSearch />
           </div>
 
           {/* Mobile Menu Items */}
-          <nav className="mobile-menu">
-            <Link to="/" className="mobile-nav-link">
-              <span className="mobile-icon">🏠</span>
+          <nav className="main-mobile-menu">
+            <Link to="/" className="main-mobile-nav-link">
+              <span className="main-mobile-icon">🏠</span>
               Home
             </Link>
             
             {/* Mobile Categories */}
-            <div className="mobile-categories">
-              <div className="mobile-categories-header">
-                <span className="mobile-icon">📂</span>
+            <div className="main-mobile-categories">
+              <button 
+                className="main-mobile-nav-link main-mobile-categories-header" 
+                onClick={(e) => {
+                  e.preventDefault();
+                  setIsMobileCategoriesOpen(!isMobileCategoriesOpen);
+                }}
+                aria-expanded={isMobileCategoriesOpen}
+              >
+                <span className="main-mobile-icon">📂</span>
                 Categories
-              </div>
-              <div className="mobile-categories-list">
-                <button
-                  onClick={handleAllCategoriesClick}
-                  className="mobile-category-item"
-                >
-                  <span className="mobile-category-icon">🛍️</span>
-                  All Categories
-                </button>
-                
-                {categoriesLoading ? (
-                  <div className="mobile-categories-loading">
-                    <div className="mini-spinner"></div>
-                    <span>Loading...</span>
-                  </div>
-                ) : categories.length === 0 ? (
-                  <div className="mobile-no-categories">
-                    <span>No categories available</span>
-                  </div>
-                ) : (
-                  categories.map((category) => (
-                    <button
-                      key={category.id}
-                      onClick={() => handleCategoryClick(category.id, category.name)}
-                      className="mobile-category-item"
-                    >
-                      <span className="mobile-category-icon">📱</span>
-                      {category.name}
-                    </button>
-                  ))
-                )}
-              </div>
+                <span className={`main-dropdown-arrow ${isMobileCategoriesOpen ? 'open' : ''}`}>▼</span>
+              </button>
+              {isMobileCategoriesOpen && (
+                <div className="main-mobile-categories-list">
+                  <button
+                    onClick={handleAllCategoriesClick}
+                    className="main-mobile-category-item"
+                  >
+                    <span className="main-mobile-category-icon">🛍️</span>
+                    All Categories
+                  </button>
+                  
+                  {categoriesLoading ? (
+                    <div className="main-mobile-categories-loading">
+                      <div className="main-mini-spinner"></div>
+                      <span>Loading...</span>
+                    </div>
+                  ) : categories.length === 0 ? (
+                    <div className="main-mobile-no-categories">
+                      <span>No categories available</span>
+                    </div>
+                  ) : (
+                    categories.map((category) => (
+                      <button
+                        key={category.id}
+                        onClick={() => handleCategoryClick(category.id, category.name)}
+                        className="main-mobile-category-item"
+                      >
+                        <span className="main-mobile-category-icon">📱</span>
+                        {category.name}
+                      </button>
+                    ))
+                  )}
+                </div>
+              )}
             </div>
             
-            <Link to="/products" className="mobile-nav-link">
-              <span className="mobile-icon">📱</span>
+            <Link to="/products" className="main-mobile-nav-link">
+              <span className="main-mobile-icon">📱</span>
               Products
             </Link>
             
             {isAuthenticated ? (
               <>
-                <Link to="/profile" className="mobile-nav-link">
-                  <span className="mobile-icon">👤</span>
+                <Link to="/profile" className="main-mobile-nav-link">
+                  <span className="main-mobile-icon">👤</span>
                   Profile
                 </Link>
-                <Link to="/cart" className="mobile-nav-link">
-                  <span className="mobile-icon">🛒</span>
+                <Link to="/cart" className="main-mobile-nav-link">
+                  <span className="main-mobile-icon">🛒</span>
                   Cart
                   {totalItems > 0 && (
-                    <span className="mobile-badge">{totalItems}</span>
+                    <span className="main-mobile-badge">{totalItems}</span>
                   )}
                 </Link>
                 {isAdmin() && (
-                  <Link to="/admin" className="mobile-nav-link admin-link">
-                    <span className="mobile-icon">⚙️</span>
+                  <Link to="/admin" className="main-mobile-nav-link main-admin-link">
+                    <span className="main-mobile-icon">⚙️</span>
                     Admin Panel
                   </Link>
                 )}
-                <button onClick={handleLogout} className="mobile-nav-link logout-link">
-                  <span className="mobile-icon">🚪</span>
+                <button onClick={handleLogout} className="main-mobile-nav-link main-logout-link">
+                  <span className="main-mobile-icon">🚪</span>
                   Logout
                 </button>
               </>
             ) : (
               <>
-                <Link to="/login" className="mobile-nav-link">
-                  <span className="mobile-icon">🔑</span>
+                <Link to="/login" className="main-mobile-nav-link">
+                  <span className="main-mobile-icon">🔑</span>
                   Login
                 </Link>
-                <Link to="/register" className="mobile-nav-link">
-                  <span className="mobile-icon">📝</span>
+                <Link to="/register" className="main-mobile-nav-link">
+                  <span className="main-mobile-icon">📝</span>
                   Register
                 </Link>
               </>
@@ -381,14 +395,14 @@ const Header = () => {
 
           {/* User Info in Mobile */}
           {isAuthenticated && (
-            <div className="mobile-user-info">
-              <div className="mobile-user-avatar">
+            <div className="main-mobile-user-info">
+              <div className="main-mobile-user-avatar">
                 {user?.name ? user.name.charAt(0).toUpperCase() : 'U'}
               </div>
-              <div className="mobile-user-details">
-                <div className="mobile-user-name">{user?.name || 'User'}</div>
-                <div className="mobile-user-email">{user?.email}</div>
-                <span className={`mobile-role-badge ${user?.role}`}>
+              <div className="main-mobile-user-details">
+                <div className="main-mobile-user-name">{user?.name || 'User'}</div>
+                <div className="main-mobile-user-email">{user?.email}</div>
+                <span className={`main-mobile-role-badge ${user?.role}`}>
                   {user?.role === 'admin' ? 'Administrator' : 'Customer'}
                 </span>
               </div>

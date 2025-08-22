@@ -30,7 +30,23 @@ const ProfilePage = () => {
         setLoading(true);
         setError(null);
         const userOrders = await orderService.getMyOrders();
-        setOrders(Array.isArray(userOrders) ? userOrders : []);
+        // For each order, fetch its details
+        const detailedOrders = await Promise.all(
+          (Array.isArray(userOrders) ? userOrders : []).map(async (order) => {
+            try {
+              const details = await orderService.getOrder(order.id);
+              return {
+                ...order,
+                items: details.items || [],
+                total: details.items?.reduce((sum, item) => sum + (item.price * item.quantity), 0) || 0
+              };
+            } catch (error) {
+              console.error(`Error fetching details for order ${order.id}:`, error);
+              return order;
+            }
+          })
+        );
+        setOrders(detailedOrders);
       } catch (err) {
         setError(err.message || 'Failed to load orders');
         setOrders([]);
@@ -186,7 +202,7 @@ const ProfilePage = () => {
                           <div className="order-total">
                             <span className="total-label">Total:</span>
                             <span className="total-amount">
-                              ${calculateOrderTotal(order).toFixed(2)}
+                              ${(calculateOrderTotal(order) || 0).toFixed(2)}
                             </span>
                           </div>
                           
@@ -253,12 +269,6 @@ const ProfilePage = () => {
                 </div>
 
                 <div className="account-actions">
-                  <button className="edit-profile-btn">
-                    Edit Profile
-                  </button>
-                  <button className="change-password-btn">
-                    Change Password
-                  </button>
                   {user?.role === 'admin' && (
                     <button 
                       onClick={() => navigate('/admin')}

@@ -86,7 +86,7 @@ const LoginPage = () => {
               Don't have an account? 
               <Link to="/register" className="auth-link"> Sign up here</Link>
             </p>
-            <Link to="/forgot-password" className="forgot-link">
+            <Link to="/reset-password" className="forgot-link">
               Forgot your password?
             </Link>
           </div>

@@ -42,10 +42,6 @@ const OrderDetailsModal = ({
                 <span className="label">Customer ID:</span>
                 <span className="value">{order.order.user_id}</span>
               </div>
-              <div className="info-item">
-                <span className="label">Email:</span>
-                <span className="value">{order.order.user_email || 'N/A'}</span>
-              </div>
             </div>
           </div>
 

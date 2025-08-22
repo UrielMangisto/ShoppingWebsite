@@ -1,63 +1,162 @@
-import { createContext, useContext, useState } from 'react';
-import { addToCart, removeFromCart, updateCartItem, getCart } from '../services/cartService';
+// src/context/CartContext.jsx
+import React, { createContext, useContext, useReducer, useEffect } from 'react';
+import { cartService } from '../services/cartService';
+import { useAuth } from './AuthContext';
 
-export const CartContext = createContext();
+const CartContext = createContext();
 
-export function CartProvider({ children }) {
-  const [cart, setCart] = useState([]);
-  const [loading, setLoading] = useState(false);
+// Cart state reducer
+const cartReducer = (state, action) => {
+  switch (action.type) {
+    case 'SET_LOADING':
+      return { ...state, loading: action.payload };
+    case 'SET_CART':
+      return { 
+        ...state, 
+        items: action.payload.items || [],
+        totalAmount: action.payload.totalAmount || 0,
+        totalItems: action.payload.totalItems || 0,
+        loading: false 
+      };
+    case 'SET_ERROR':
+      return { ...state, error: action.payload, loading: false };
+    case 'CLEAR_ERROR':
+      return { ...state, error: null };
+    case 'CLEAR_CART':
+      return { 
+        items: [], 
+        totalAmount: 0, 
+        totalItems: 0, 
+        loading: false, 
+        error: null 
+      };
+    default:
+      return state;
+  }
+};
 
-  const loadCart = async () => {
-    setLoading(true);
+const initialState = {
+  items: [],
+  totalAmount: 0,
+  totalItems: 0,
+  loading: false,
+  error: null
+};
+
+export const CartProvider = ({ children }) => {
+  const [state, dispatch] = useReducer(cartReducer, initialState);
+  const { isAuthenticated } = useAuth();
+
+  // Fetch cart when user is authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchCart();
+    } else {
+      dispatch({ type: 'CLEAR_CART' });
+    }
+  }, [isAuthenticated]);
+
+  const fetchCart = async () => {
     try {
-      const cartData = await getCart();
-      setCart(cartData);
+      dispatch({ type: 'SET_LOADING', payload: true });
+      dispatch({ type: 'CLEAR_ERROR' });
+      
+      const cartData = await cartService.getCart();
+      
+      // Transform cart data to match our component expectations
+      const transformedData = {
+        items: cartData.items?.map(item => ({
+          id: item.id,
+          productId: item.productId,
+          quantity: item.quantity,
+          product: {
+            name: item.product.name,
+            price: item.product.price,
+            imageUrl: item.product.imageUrl
+          },
+          subtotal: item.subtotal
+        })) || [],
+        totalAmount: cartData.totalAmount || 0,
+        totalItems: cartData.totalItems || 0
+      };
+      
+      dispatch({ type: 'SET_CART', payload: transformedData });
     } catch (error) {
-      console.error('Error loading cart:', error);
-    } finally {
-      setLoading(false);
+      dispatch({ type: 'SET_ERROR', payload: error.message });
     }
   };
 
-  const addItem = async (productId, quantity = 1) => {
-    setLoading(true);
+  const addToCart = async (productId, quantity = 1) => {
     try {
-      const updatedCart = await addToCart(productId, quantity);
-      setCart(updatedCart);
+      dispatch({ type: 'CLEAR_ERROR' });
+      
+      await cartService.addToCart(productId, quantity);
+      await fetchCart(); // Refresh cart after adding
+      
+      return true;
     } catch (error) {
-      console.error('Error adding item to cart:', error);
-    } finally {
-      setLoading(false);
+      dispatch({ type: 'SET_ERROR', payload: error.message });
+      throw error;
     }
   };
 
-  const removeItem = async (productId) => {
-    setLoading(true);
+  const updateCartItem = async (itemId, quantity) => {
     try {
-      const updatedCart = await removeFromCart(productId);
-      setCart(updatedCart);
+      dispatch({ type: 'CLEAR_ERROR' });
+      
+      await cartService.updateCartItem(itemId, quantity);
+      await fetchCart(); // Refresh cart after updating
+      
+      return true;
     } catch (error) {
-      console.error('Error removing item from cart:', error);
-    } finally {
-      setLoading(false);
+      dispatch({ type: 'SET_ERROR', payload: error.message });
+      throw error;
     }
   };
 
-  const updateItem = async (productId, quantity) => {
-    setLoading(true);
+  const removeFromCart = async (itemId) => {
     try {
-      const updatedCart = await updateCartItem(productId, quantity);
-      setCart(updatedCart);
+      dispatch({ type: 'CLEAR_ERROR' });
+      
+      await cartService.deleteCartItem(itemId);
+      await fetchCart(); // Refresh cart after removing
+      
+      return true;
     } catch (error) {
-      console.error('Error updating cart item:', error);
-    } finally {
-      setLoading(false);
+      dispatch({ type: 'SET_ERROR', payload: error.message });
+      throw error;
     }
+  };
+
+  const clearCart = () => {
+    dispatch({ type: 'CLEAR_CART' });
+  };
+
+  const clearError = () => {
+    dispatch({ type: 'CLEAR_ERROR' });
+  };
+
+  const value = {
+    ...state,
+    addToCart,
+    updateCartItem,
+    removeFromCart,
+    clearCart,
+    clearError,
+    fetchCart
   };
 
   return (
-    <CartContext.Provider value={{ cart, loading, addItem, removeItem, updateItem, loadCart }}>
+    <CartContext.Provider value={value}>
       {children}
     </CartContext.Provider>
   );
-}
+};
+
+export const useCart = () => {
+  const context = useContext(CartContext);
+  if (!context) {
+    throw new Error('useCart must be used within a CartProvider');
+  }
+  return context;
+};

@@ -1,0 +1,71 @@
+/* src/components/common/GlobalSearch/GlobalSearch.css */
+.global-search {
+  display: flex;
+  align-items: center;
+  background: #f8f9fa;
+  border-radius: 25px;
+  padding: 0.5rem;
+  width: 100%;
+  transition: all 0.3s ease;
+  border: 2px solid transparent;
+}
+
+.global-search:focus-within {
+  border-color: #667eea;
+  box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+}
+
+.global-search-input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  padding: 0.5rem 1rem;
+  font-size: 1rem;
+  outline: none;
+  box-shadow: none;
+  border-color: none;
+  color: #333;
+  min-width: 0; /* Prevents input from overflowing */
+}
+.global-search-input:focus-within {
+  flex: 1;
+  border: none;
+  background: transparent;
+  padding: 0.5rem 1rem;
+  font-size: 1rem;
+  outline: none;
+  box-shadow: none;
+  border-color: none;
+  color: #333;
+}
+
+.global-search-input::placeholder {
+  color: #999;
+  opacity: 0.8;
+}
+
+.global-search-btn {
+  background: #667eea;
+  border: none;
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  color: white;
+  padding: 0;
+  margin-left: 0.5rem;
+  flex-shrink: 0;
+}
+
+.global-search-btn:hover {
+  background: #5a6fd8;
+  transform: translateY(-1px);
+}
+
+.global-search-btn:active {
+  transform: translateY(0);
+}

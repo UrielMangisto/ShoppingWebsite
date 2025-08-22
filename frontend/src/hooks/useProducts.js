@@ -1,110 +1,151 @@
-import { useState, useCallback } from 'react';
-import productsService from '../services/productsService';
+// src/hooks/useProducts.js
+import { useState, useEffect, useCallback } from 'react';
+import { productService } from '../services/productService';
 
-export const useProducts = () => {
+export const useProducts = (initialFilters = {}) => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [filters, setFilters] = useState(initialFilters);
 
-  const getProducts = useCallback(async (filters = {}) => {
+  // טעינת מוצרים
+  const loadProducts = useCallback(async (customFilters = {}) => {
     try {
       setLoading(true);
       setError(null);
-      const data = await productsService.getAllProducts(filters);
+      const finalFilters = { ...filters, ...customFilters };
+      const data = await productService.getAllProducts(finalFilters);
       setProducts(data);
-      return data;
-    } catch (err) {
-      setError(err.message || 'Failed to fetch products');
-      throw err;
+    } catch (error) {
+      console.error('Load products error:', error);
+      setError(error.message);
+      setProducts([]);
     } finally {
       setLoading(false);
     }
+  }, [filters]);
+
+  // עדכון פילטרים
+  const updateFilters = useCallback((newFilters) => {
+    setFilters(prev => ({ ...prev, ...newFilters }));
   }, []);
 
-  const getProduct = useCallback(async (id) => {
-    try {
-      setLoading(true);
-      setError(null);
-      const data = await productsService.getProduct(id);
-      return data;
-    } catch (err) {
-      setError(err.message || 'Failed to fetch product');
-      throw err;
-    } finally {
-      setLoading(false);
-    }
+  // איפוס פילטרים
+  const resetFilters = useCallback(() => {
+    setFilters({});
   }, []);
 
-  const searchProducts = useCallback(async (query, categoryId) => {
-    try {
-      setLoading(true);
-      setError(null);
-      const data = await productsService.search(query, categoryId);
-      setProducts(data);
-      return data;
-    } catch (err) {
-      setError(err.message || 'Failed to search products');
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  const createProduct = useCallback(async (productData) => {
-    try {
-      setLoading(true);
-      setError(null);
-      const response = await productsService.createProduct(productData);
-      await getProducts(); // Refresh products list
-      return response;
-    } catch (err) {
-      setError(err.message || 'Failed to create product');
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  }, [getProducts]);
-
-  const updateProduct = useCallback(async (id, productData) => {
-    try {
-      setLoading(true);
-      setError(null);
-      const response = await productsService.updateProduct(id, productData);
-      await getProducts(); // Refresh products list
-      return response;
-    } catch (err) {
-      setError(err.message || 'Failed to update product');
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  }, [getProducts]);
-
-  const deleteProduct = useCallback(async (id) => {
-    try {
-      setLoading(true);
-      setError(null);
-      await productsService.deleteProduct(id);
-      await getProducts(); // Refresh products list
-    } catch (err) {
-      setError(err.message || 'Failed to delete product');
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  }, [getProducts]);
+  // טעינה ראשונית
+  useEffect(() => {
+    loadProducts();
+  }, [loadProducts]);
 
   return {
     products,
     loading,
     error,
-    getProducts,
-    getProduct,
-    searchProducts,
-    createProduct,
-    updateProduct,
-    deleteProduct,
+    filters,
+    loadProducts,
+    updateFilters,
+    resetFilters,
+    refetch: loadProducts
   };
 };
 
-export default useProducts;
+export const useProduct = (productId) => {
+  const [product, setProduct] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [reviews, setReviews] = useState([]);
+  const [reviewsLoading, setReviewsLoading] = useState(false);
+
+  // טעינת מוצר בודד
+  const loadProduct = useCallback(async () => {
+    if (!productId) return;
+    
+    try {
+      setLoading(true);
+      setError(null);
+      const data = await productService.getProductById(productId);
+      setProduct(data);
+    } catch (error) {
+      console.error('Load product error:', error);
+      setError(error.message);
+      setProduct(null);
+    } finally {
+      setLoading(false);
+    }
+  }, [productId]);
+
+  // טעינת ביקורות
+  const loadReviews = useCallback(async () => {
+    if (!productId) return;
+    
+    try {
+      setReviewsLoading(true);
+      const data = await productService.getProductReviews(productId);
+      setReviews(data);
+    } catch (error) {
+      console.error('Load reviews error:', error);
+      setReviews([]);
+    } finally {
+      setReviewsLoading(false);
+    }
+  }, [productId]);
+
+  // הוספת ביקורת
+  const addReview = async (reviewData) => {
+    try {
+      await productService.addProductReview(productId, reviewData);
+      await loadReviews(); // רענון ביקורות
+      return { success: true };
+    } catch (error) {
+      console.error('Add review error:', error);
+      return { success: false, error: error.message };
+    }
+  };
+
+  // עדכון ביקורת
+  const updateReview = async (reviewId, reviewData) => {
+    try {
+      await productService.updateProductReview(productId, reviewId, reviewData);
+      await loadReviews(); // רענון ביקורות
+      return { success: true };
+    } catch (error) {
+      console.error('Update review error:', error);
+      return { success: false, error: error.message };
+    }
+  };
+
+  // מחיקת ביקורת
+  const deleteReview = async (reviewId) => {
+    try {
+      await productService.deleteProductReview(productId, reviewId);
+      await loadReviews(); // רענון ביקורות
+      return { success: true };
+    } catch (error) {
+      console.error('Delete review error:', error);
+      return { success: false, error: error.message };
+    }
+  };
+
+  // טעינה ראשונית
+  useEffect(() => {
+    loadProduct();
+    loadReviews();
+  }, [loadProduct, loadReviews]);
+
+  return {
+    product,
+    loading,
+    error,
+    reviews,
+    reviewsLoading,
+    loadProduct,
+    loadReviews,
+    addReview,
+    updateReview,
+    deleteReview,
+    refetch: loadProduct
+  };
+};

@@ -3,6 +3,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
 import { useCart } from '../../../context/CartContext';
+import { useCategories } from '../../../hooks/useCategories';
+import GlobalSearch from '../GlobalSearch/GlobalSearch';
 import './Header.css';
 
 const Header = () => {
@@ -10,17 +12,22 @@ const Header = () => {
   const location = useLocation();
   const { user, isAuthenticated, logout, isAdmin } = useAuth();
   const { totalItems } = useCart();
+  const { categories, loading: categoriesLoading } = useCategories();
   
-  const [searchQuery, setSearchQuery] = useState('');
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
+  const [isCategoriesOpen, setIsCategoriesOpen] = useState(false);
   const profileDropdownRef = useRef(null);
+  const categoriesDropdownRef = useRef(null);
 
-  // Close profile dropdown when clicking outside
+  // Close dropdowns when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (profileDropdownRef.current && !profileDropdownRef.current.contains(event.target)) {
         setIsProfileDropdownOpen(false);
+      }
+      if (categoriesDropdownRef.current && !categoriesDropdownRef.current.contains(event.target)) {
+        setIsCategoriesOpen(false);
       }
     };
 
@@ -33,15 +40,24 @@ const Header = () => {
   // Close mobile menu when route changes
   useEffect(() => {
     setIsMenuOpen(false);
+    setIsCategoriesOpen(false);
+    setIsProfileDropdownOpen(false);
   }, [location]);
 
-  // Handle search
-  const handleSearch = (e) => {
-    e.preventDefault();
-    if (searchQuery.trim()) {
-      navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
-      setSearchQuery('');
-    }
+  // Handle category selection - Navigate to individual category page
+  const handleCategoryClick = (categoryId, categoryName) => {
+    setIsCategoriesOpen(false);
+    // Navigate to individual category page: /category/electronics
+    const categorySlug = categoryName.toLowerCase().replace(/\s+/g, '-');
+    navigate(`/category/${categorySlug}`, { 
+      state: { categoryId, categoryName } 
+    });
+  };
+
+  // Handle all categories click
+  const handleAllCategoriesClick = () => {
+    setIsCategoriesOpen(false);
+    navigate('/categories');
   };
 
   // Handle logout
@@ -61,6 +77,11 @@ const Header = () => {
     setIsProfileDropdownOpen(!isProfileDropdownOpen);
   };
 
+  // Toggle categories dropdown - CLICK ONLY VERSION
+  const toggleCategoriesDropdown = () => {
+    setIsCategoriesOpen(!isCategoriesOpen);
+  };
+
   return (
     <header className="header">
       <div className="header-container">
@@ -74,20 +95,9 @@ const Header = () => {
           </Link>
         </div>
 
-        {/* Search Bar */}
+        {/* Search Bar - Desktop */}
         <div className="header-search">
-          <form onSubmit={handleSearch} className="search-form">
-            <input
-              type="text"
-              placeholder="Search products..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="search-input"
-            />
-            <button type="submit" className="search-button">
-              <span className="search-icon">🔍</span>
-            </button>
-          </form>
+          <GlobalSearch />
         </div>
 
         {/* Desktop Navigation */}
@@ -98,6 +108,65 @@ const Header = () => {
           >
             Home
           </Link>
+          
+          {/* Categories Dropdown - CLICK ONLY */}
+          <div 
+            className="categories-dropdown" 
+            ref={categoriesDropdownRef}
+          >
+            <button
+              onClick={toggleCategoriesDropdown}
+              className="categories-trigger"
+              aria-expanded={isCategoriesOpen}
+              aria-haspopup="true"
+            >
+              Categories
+              <span className={`dropdown-arrow ${isCategoriesOpen ? 'open' : ''}`}>
+                ▼
+              </span>
+            </button>
+
+            {isCategoriesOpen && (
+              <div className="categories-menu">
+                <div className="categories-header">
+                  <h3>Shop by Category</h3>
+                </div>
+                
+                <div className="categories-list">
+                  <button
+                    onClick={handleAllCategoriesClick}
+                    className="category-item all-categories"
+                  >
+                    <span className="category-icon">🛍️</span>
+                    <span className="category-name">All Categories</span>
+                  </button>
+                  
+                  {categoriesLoading ? (
+                    <div className="categories-loading">
+                      <div className="mini-spinner"></div>
+                      <span>Loading categories...</span>
+                    </div>
+                  ) : categories.length === 0 ? (
+                    <div className="no-categories">
+                      <span>No categories available</span>
+                    </div>
+                  ) : (
+                    categories.map((category) => (
+                      <button
+                        key={category.id}
+                        onClick={() => handleCategoryClick(category.id, category.name)}
+                        className="category-item"
+                      >
+                        <span className="category-icon">📱</span>
+                        <span className="category-name">{category.name}</span>
+                      </button>
+                    ))
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+          
           <Link 
             to="/products" 
             className={`nav-link ${location.pathname === '/products' ? 'active' : ''}`}
@@ -120,6 +189,8 @@ const Header = () => {
                 <button 
                   onClick={toggleProfileDropdown}
                   className="profile-button"
+                  aria-expanded={isProfileDropdownOpen}
+                  aria-haspopup="true"
                 >
                   <div className="profile-avatar">
                     {user?.name ? user.name.charAt(0).toUpperCase() : 'U'}
@@ -201,6 +272,7 @@ const Header = () => {
           className="mobile-menu-button"
           onClick={toggleMenu}
           aria-label="Toggle menu"
+          aria-expanded={isMenuOpen}
         >
           <span className={`hamburger ${isMenuOpen ? 'open' : ''}`}>
             <span></span>
@@ -215,18 +287,7 @@ const Header = () => {
         <div className="mobile-nav-content">
           {/* Mobile Search */}
           <div className="mobile-search">
-            <form onSubmit={handleSearch} className="search-form">
-              <input
-                type="text"
-                placeholder="Search products..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="search-input"
-              />
-              <button type="submit" className="search-button">
-                <span className="search-icon">🔍</span>
-              </button>
-            </form>
+            <GlobalSearch />
           </div>
 
           {/* Mobile Menu Items */}
@@ -235,6 +296,46 @@ const Header = () => {
               <span className="mobile-icon">🏠</span>
               Home
             </Link>
+            
+            {/* Mobile Categories */}
+            <div className="mobile-categories">
+              <div className="mobile-categories-header">
+                <span className="mobile-icon">📂</span>
+                Categories
+              </div>
+              <div className="mobile-categories-list">
+                <button
+                  onClick={handleAllCategoriesClick}
+                  className="mobile-category-item"
+                >
+                  <span className="mobile-category-icon">🛍️</span>
+                  All Categories
+                </button>
+                
+                {categoriesLoading ? (
+                  <div className="mobile-categories-loading">
+                    <div className="mini-spinner"></div>
+                    <span>Loading...</span>
+                  </div>
+                ) : categories.length === 0 ? (
+                  <div className="mobile-no-categories">
+                    <span>No categories available</span>
+                  </div>
+                ) : (
+                  categories.map((category) => (
+                    <button
+                      key={category.id}
+                      onClick={() => handleCategoryClick(category.id, category.name)}
+                      className="mobile-category-item"
+                    >
+                      <span className="mobile-category-icon">📱</span>
+                      {category.name}
+                    </button>
+                  ))
+                )}
+              </div>
+            </div>
+            
             <Link to="/products" className="mobile-nav-link">
               <span className="mobile-icon">📱</span>
               Products

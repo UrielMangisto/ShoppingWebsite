@@ -8,7 +8,8 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
 import { ProductsProvider } from './context/ProductsContext';
-
+import CategoryPage from './pages/CategoryPage/CategoryPage';
+import CategoriesPage from './pages/CategoriesPage/CategoriesPage'; // Add this import
 import Header from './components/common/Header/Header';
 import Footer from './components/common/Footer/Footer';
 import HomePage from './pages/HomePage/HomePage';
@@ -41,7 +42,14 @@ function App() {
                   <Route path="/login" element={<LoginPage />} />
                   <Route path="/register" element={<RegisterPage />} />
                   <Route path="/profile" element={<ProfilePage />} />
+                  
+                  {/* Category Routes */}
+                  <Route path="/categories" element={<CategoriesPage />} />
+                  <Route path="/category/:categorySlug" element={<CategoryPage />} />
+                  
                   <Route path="/orders/:orderId" element={<OrderDetailPage />} />
+                  
+                  {/* Admin Routes */}
                   <Route path="/admin/setup" element={<AdminSetup />} />
                   <Route path="/admin" element={<AdminDashboard />} />
                   <Route path="/admin/dashboard" element={<AdminDashboard />} />

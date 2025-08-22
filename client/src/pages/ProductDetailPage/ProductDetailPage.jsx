@@ -1,6 +1,6 @@
 // src/pages/ProductDetailPage/ProductDetailPage.jsx
 import React, { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useProducts } from '../../context/ProductsContext';
 import { useCart } from '../../context/CartContext';
 import { useAuth } from '../../context/AuthContext';
@@ -10,6 +10,7 @@ import './ProductDetailPage.css';
 
 const ProductDetailPage = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
   const { currentProduct, loading, error, fetchProduct } = useProducts();
   const { addToCart, loading: cartLoading } = useCart();
   const { isAuthenticated } = useAuth();
@@ -23,6 +24,19 @@ const ProductDetailPage = () => {
       fetchProduct(id);
     }
   }, [id]);
+
+  // Handle category click - navigate to category page
+  const handleCategoryClick = () => {
+    if (currentProduct.category_id && currentProduct.category_name) {
+      const categorySlug = currentProduct.category_name.toLowerCase().replace(/\s+/g, '-');
+      navigate(`/category/${categorySlug}`, { 
+        state: { 
+          categoryId: currentProduct.category_id, 
+          categoryName: currentProduct.category_name 
+        } 
+      });
+    }
+  };
 
   const handleAddToCart = async () => {
     if (!isAuthenticated) {
@@ -128,17 +142,23 @@ const ProductDetailPage = () => {
       <div className="container">
         {/* Breadcrumb */}
         <div className="breadcrumb">
-          <Link to="/">Home</Link>
-          <span>/</span>
-          <Link to="/products">Products</Link>
+          <Link to="/" className="breadcrumb-link">Home</Link>
+          <span className="breadcrumb-separator">/</span>
+          <Link to="/products" className="breadcrumb-link">Products</Link>
           {currentProduct.category_name && (
             <>
-              <span>/</span>
-              <span>{currentProduct.category_name}</span>
+              <span className="breadcrumb-separator">/</span>
+              <button 
+                onClick={handleCategoryClick}
+                className="breadcrumb-link breadcrumb-category"
+                title={`View all ${currentProduct.category_name} products`}
+              >
+                {currentProduct.category_name}
+              </button>
             </>
           )}
-          <span>/</span>
-          <span>{currentProduct.name}</span>
+          <span className="breadcrumb-separator">/</span>
+          <span className="breadcrumb-current">{currentProduct.name}</span>
         </div>
 
         {/* Product Main Section */}
@@ -183,7 +203,14 @@ const ProductDetailPage = () => {
 
             {currentProduct.category_name && (
               <div className="product-category">
-                <strong>Category:</strong> {currentProduct.category_name}
+                <strong>Category:</strong> 
+                <button 
+                  onClick={handleCategoryClick}
+                  className="category-link"
+                  title={`View all ${currentProduct.category_name} products`}
+                >
+                  {currentProduct.category_name}
+                </button>
               </div>
             )}
 
@@ -244,7 +271,16 @@ const ProductDetailPage = () => {
                   <h4>Product Information</h4>
                   <ul>
                     <li><strong>Product ID:</strong> {currentProduct.id}</li>
-                    <li><strong>Category:</strong> {currentProduct.category_name || 'Uncategorized'}</li>
+                    <li>
+                      <strong>Category:</strong> 
+                      <button 
+                        onClick={handleCategoryClick}
+                        className="category-link inline"
+                        title={`View all ${currentProduct.category_name} products`}
+                      >
+                        {currentProduct.category_name || 'Uncategorized'}
+                      </button>
+                    </li>
                     <li><strong>Stock:</strong> {currentProduct.stock} units</li>
                     <li><strong>Added:</strong> {formatDate(currentProduct.created_at)}</li>
                     {currentProduct.updated_at && currentProduct.updated_at !== currentProduct.created_at && (

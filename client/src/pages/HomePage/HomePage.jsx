@@ -36,9 +36,6 @@ const HomePage = () => {
               <Link to="/products" className="btn btn-primary btn-large">
                 Shop Now
               </Link>
-              <Link to="/categories" className="btn btn-secondary btn-large">
-                Browse Categories
-              </Link>
             </div>
           </div>
         </div>

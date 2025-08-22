@@ -7,7 +7,7 @@ import { orderService } from '../../../services/orderService';
 import './AdminDashboard.css';
 
 const AdminDashboard = () => {
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const [stats, setStats] = useState({
     totalProducts: 0,
@@ -17,14 +17,16 @@ const AdminDashboard = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Check if user is admin
-    if (!isAuthenticated || user?.role !== 'admin') {
+    // Check if user is admin (but only after auth loading is complete)
+    if (!authLoading && (!isAuthenticated || user?.role !== 'admin')) {
       navigate('/login');
       return;
     }
 
-    fetchDashboardStats();
-  }, [isAuthenticated, user, navigate]);
+    if (!authLoading && isAuthenticated && user?.role === 'admin') {
+      fetchDashboardStats();
+    }
+  }, [authLoading, isAuthenticated, user, navigate]);
 
   const fetchDashboardStats = async () => {
     try {
@@ -47,6 +49,20 @@ const AdminDashboard = () => {
       setLoading(false);
     }
   };
+
+  // Show loading while checking authentication
+  if (authLoading) {
+    return (
+      <div className="admin-dashboard">
+        <div className="container">
+          <div className="loading-container">
+            <div className="loading-spinner"></div>
+            <p>Checking access...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (!isAuthenticated || user?.role !== 'admin') {
     return (

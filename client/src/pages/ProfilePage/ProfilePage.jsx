@@ -6,20 +6,20 @@ import { orderService } from '../../services/orderService';
 import './ProfilePage.css';
 
 const ProfilePage = () => {
-  const { user, isAuthenticated, logout } = useAuth();
+  const { user, isAuthenticated, logout, loading } = useAuth();
   const navigate = useNavigate();
   
   const [orders, setOrders] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [ordersLoading, setOrdersLoading] = useState(true);
   const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState('orders');
 
-  // Redirect if not authenticated
+  // Redirect if not authenticated (but only after loading is complete)
   useEffect(() => {
-    if (!isAuthenticated) {
+    if (!loading && !isAuthenticated) {
       navigate('/login');
     }
-  }, [isAuthenticated, navigate]);
+  }, [loading, isAuthenticated, navigate]);
 
   // Fetch user orders
   useEffect(() => {
@@ -27,36 +27,21 @@ const ProfilePage = () => {
       if (!isAuthenticated) return;
       
       try {
-        setLoading(true);
+        setOrdersLoading(true);
         setError(null);
         const userOrders = await orderService.getMyOrders();
-        // For each order, fetch its details
-        const detailedOrders = await Promise.all(
-          (Array.isArray(userOrders) ? userOrders : []).map(async (order) => {
-            try {
-              const details = await orderService.getOrder(order.id);
-              return {
-                ...order,
-                items: details.items || [],
-                total: details.items?.reduce((sum, item) => sum + (item.price * item.quantity), 0) || 0
-              };
-            } catch (error) {
-              console.error(`Error fetching details for order ${order.id}:`, error);
-              return order;
-            }
-          })
-        );
-        setOrders(detailedOrders);
+        setOrders(Array.isArray(userOrders) ? userOrders : []);
       } catch (err) {
+        console.error('Error fetching orders:', err);
         setError(err.message || 'Failed to load orders');
         setOrders([]);
       } finally {
-        setLoading(false);
+        setOrdersLoading(false);
       }
     };
 
     fetchOrders();
-  }, [isAuthenticated]);
+  }, [isAuthenticated, user]);
 
   // Format date
   const formatDate = (dateString) => {
@@ -75,11 +60,20 @@ const ProfilePage = () => {
 
   // Calculate order total (if available)
   const calculateOrderTotal = (order) => {
-    if (order.total) return order.total;
-    if (order.items && Array.isArray(order.items)) {
-      return order.items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    try {
+      if (order.total && !isNaN(order.total)) return parseFloat(order.total);
+      if (order.items && Array.isArray(order.items)) {
+        return order.items.reduce((sum, item) => {
+          const price = parseFloat(item.price) || 0;
+          const quantity = parseInt(item.quantity) || 0;
+          return sum + (price * quantity);
+        }, 0);
+      }
+      return 0;
+    } catch (error) {
+      console.error('Error calculating order total:', error, order);
+      return 0;
     }
-    return 0;
   };
 
   // Handle logout
@@ -92,6 +86,20 @@ const ProfilePage = () => {
   const handleViewOrder = (orderId) => {
     navigate(`/orders/${orderId}`);
   };
+
+  // Show loading while checking authentication
+  if (loading) {
+    return (
+      <div className="profile-page">
+        <div className="container">
+          <div className="loading-container">
+            <div className="spinner"></div>
+            <p>Loading...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (!isAuthenticated) {
     return (
@@ -151,7 +159,7 @@ const ProfilePage = () => {
                   <p>View and track all your orders</p>
                 </div>
 
-                {loading ? (
+                {ordersLoading ? (
                   <div className="loading-state">
                     <div className="spinner"></div>
                     <p>Loading your orders...</p>
@@ -202,7 +210,7 @@ const ProfilePage = () => {
                           <div className="order-total">
                             <span className="total-label">Total:</span>
                             <span className="total-amount">
-                              ${(calculateOrderTotal(order) || 0).toFixed(2)}
+                              ${calculateOrderTotal(order).toFixed(2)}
                             </span>
                           </div>
                           
@@ -269,6 +277,12 @@ const ProfilePage = () => {
                 </div>
 
                 <div className="account-actions">
+                  <button className="edit-profile-btn">
+                    Edit Profile
+                  </button>
+                  <button className="change-password-btn">
+                    Change Password
+                  </button>
                   {user?.role === 'admin' && (
                     <button 
                       onClick={() => navigate('/admin')}

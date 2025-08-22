@@ -18,7 +18,7 @@ export const register = async (req, res, next) => {
     const userId = await createUser({ name, email, password: hashed, role: role || 'user' });
     
     // Generate JWT token
-    const token = jwt.sign({ id: userId, role: role || 'user', email }, process.env.JWT_SECRET, { expiresIn: '7d' });
+    const token = jwt.sign({ id: userId, role: role || 'user', email, name }, process.env.JWT_SECRET, { expiresIn: '7d' });
     
     res.status(201).json({ 
       message: 'User registered successfully', 
@@ -52,7 +52,7 @@ export const login = async (req, res, next) => {
     }
     
     // Generate JWT token
-    const token = jwt.sign({ id: user.id, role: user.role, email: user.email }, process.env.JWT_SECRET, { expiresIn: '7d' });
+    const token = jwt.sign({ id: user.id, role: user.role, email: user.email, name: user.name }, process.env.JWT_SECRET, { expiresIn: '7d' });
     
     res.json({ 
       message: 'Login successful', 

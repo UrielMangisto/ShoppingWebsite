@@ -37,8 +37,23 @@ export const findAllProducts = async (filters = {}) => {
     params.push(parseFloat(filters.maxPrice));
   }
 
+  // Stock filter - must be before GROUP BY
+  if (filters.inStock !== undefined) {
+    if (filters.inStock === 'true' || filters.inStock === true) {
+      query += ` AND p.stock > 0`;
+    } else if (filters.inStock === 'false' || filters.inStock === false) {
+      query += ` AND p.stock <= 0`;
+    }
+  }
+
   // Group by for aggregation
   query += ` GROUP BY p.id, c.name`;
+
+  // Rating filter - must be after GROUP BY (using HAVING)
+  if (filters.minRating) {
+    query += ` HAVING average_rating >= ?`;
+    params.push(parseFloat(filters.minRating));
+  }
 
   // Sorting
   const validSorts = {

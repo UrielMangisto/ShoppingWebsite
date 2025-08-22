@@ -1,5 +1,5 @@
 // src/context/AuthContext.jsx
-import React, { createContext, useContext, useReducer, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useReducer, useEffect } from 'react';
 import { authService } from '../services/authService';
 
 const AuthContext = createContext();
@@ -43,7 +43,7 @@ export const AuthProvider = ({ children }) => {
   const [state, dispatch] = useReducer(authReducer, initialState);
 
   // Helper function to decode JWT token (simple decode, no verification)
-  const decodeToken = useCallback((token) => {
+  const decodeToken = (token) => {
     try {
       const base64Url = token.split('.')[1];
       const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
@@ -55,46 +55,51 @@ export const AuthProvider = ({ children }) => {
       console.error('Error decoding token:', error);
       return null;
     }
-  }, []);
+  };
 
-  // Check if token is expired
-  const isTokenExpired = useCallback((token) => {
+  // Check if token is expired  
+  const isTokenExpired = (token) => {
     const decoded = decodeToken(token);
     if (!decoded || !decoded.exp) return true;
     return decoded.exp * 1000 < Date.now();
-  }, [decodeToken]);
+  };
 
   // Check if user is logged in on app start
   useEffect(() => {
     const token = authService.getToken();
-    if (token && !isTokenExpired(token)) {
-      const decoded = decodeToken(token);
-      if (decoded) {
-        // Set user from token data
-        dispatch({ 
-          type: 'SET_USER', 
-          payload: { 
-            id: decoded.id,
-            email: decoded.email,
-            role: decoded.role,
-            token 
-          } 
-        });
-      } else {
-        // Invalid token
+    
+    if (token) {
+      try {
+        // Check if token is expired
+        const decoded = decodeToken(token);
+        
+        if (decoded && decoded.exp && decoded.exp * 1000 > Date.now()) {
+          // Set user from token data
+          dispatch({ 
+            type: 'SET_USER', 
+            payload: { 
+              id: decoded.id,
+              email: decoded.email,
+              name: decoded.name,
+              role: decoded.role,
+              token 
+            } 
+          });
+        } else {
+          authService.logout();
+          dispatch({ type: 'SET_LOADING', payload: false });
+        }
+      } catch (error) {
+        console.error('AuthContext: Error processing token:', error);
         authService.logout();
         dispatch({ type: 'SET_LOADING', payload: false });
       }
     } else {
-      // No token or expired token
-      if (token) {
-        authService.logout();
-      }
       dispatch({ type: 'SET_LOADING', payload: false });
     }
-  }, [decodeToken, isTokenExpired]);
+  }, []); // Empty dependency array - only run once on mount
 
-  const login = useCallback(async (credentials) => {
+  const login = async (credentials) => {
     try {
       dispatch({ type: 'SET_LOADING', payload: true });
       dispatch({ type: 'CLEAR_ERROR' });
@@ -111,9 +116,9 @@ export const AuthProvider = ({ children }) => {
       dispatch({ type: 'SET_ERROR', payload: error.message });
       throw error;
     }
-  }, []);
+  };
 
-  const register = useCallback(async (userData) => {
+  const register = async (userData) => {
     try {
       dispatch({ type: 'SET_LOADING', payload: true });
       dispatch({ type: 'CLEAR_ERROR' });
@@ -130,25 +135,25 @@ export const AuthProvider = ({ children }) => {
       dispatch({ type: 'SET_ERROR', payload: error.message });
       throw error;
     }
-  }, []);
+  };
 
-  const logout = useCallback(() => {
+  const logout = () => {
     authService.logout();
     dispatch({ type: 'LOGOUT' });
-  }, []);
+  };
 
-  const clearError = useCallback(() => {
+  const clearError = () => {
     dispatch({ type: 'CLEAR_ERROR' });
-  }, []);
+  };
 
   // Helper functions for role checking
-  const isAdmin = useCallback(() => {
+  const isAdmin = () => {
     return state.user && state.user.role === 'admin';
-  }, [state.user]);
+  };
 
-  const isUser = useCallback(() => {
+  const isUser = () => {
     return state.user && state.user.role === 'user';
-  }, [state.user]);
+  };
 
   const value = {
     ...state,

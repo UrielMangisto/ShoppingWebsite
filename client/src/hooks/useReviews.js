@@ -25,31 +25,34 @@ export const useReviews = (productId) => {
 
   const addReview = async (reviewData) => {
     try {
-      await reviewsService.addReviewForProduct(productId, reviewData);
-      await fetchReviews(); // Refresh reviews
-      return true;
+      const newReview = await reviewsService.addReviewForProduct(productId, reviewData);
+      await fetchReviews(); // Refresh reviews to get updated list
+      return { success: true, review: newReview };
     } catch (err) {
-      throw err;
+      console.error('Error adding review:', err);
+      return { success: false, error: err.message };
     }
   };
 
   const updateReview = async (reviewId, reviewData) => {
     try {
-      await reviewsService.updateReviewForProduct(productId, reviewId, reviewData);
-      await fetchReviews(); // Refresh reviews
-      return true;
+      const updatedReview = await reviewsService.updateReviewForProduct(productId, reviewId, reviewData);
+      await fetchReviews(); // Refresh reviews to get updated list
+      return { success: true, review: updatedReview };
     } catch (err) {
-      throw err;
+      console.error('Error updating review:', err);
+      return { success: false, error: err.message };
     }
   };
 
   const deleteReview = async (reviewId) => {
     try {
       await reviewsService.deleteReviewForProduct(productId, reviewId);
-      await fetchReviews(); // Refresh reviews
-      return true;
+      await fetchReviews(); // Refresh reviews to get updated list
+      return { success: true };
     } catch (err) {
-      throw err;
+      console.error('Error deleting review:', err);
+      return { success: false, error: err.message };
     }
   };
 

@@ -9,8 +9,27 @@ const OrderDetailsModal = ({
 }) => {
   if (!order) return null;
 
+  // Handle clicking on overlay (background) to close modal
+  const handleOverlayClick = (e) => {
+    if (e.target === e.currentTarget) {
+      onClose();
+    }
+  };
+
+  // Handle escape key to close modal
+  React.useEffect(() => {
+    const handleEscape = (e) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+
+    document.addEventListener('keydown', handleEscape);
+    return () => document.removeEventListener('keydown', handleEscape);
+  }, [onClose]);
+
   return (
-    <div className="modal-overlay">
+    <div className="modal-overlay" onClick={handleOverlayClick}>
       <div className="modal order-details-modal">
         <div className="modal-header">
           <h3>Order Details - #{order.order.id}</h3>
@@ -54,7 +73,7 @@ const OrderDetailsModal = ({
                     <div className="item-image">
                       {item.image_id ? (
                         <img 
-                          src={`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/images/${item.image_id}`} 
+                          src={`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/images/${item.image_id}`} 
                           alt={item.name} 
                         />
                       ) : (
@@ -95,6 +114,16 @@ const OrderDetailsModal = ({
               </div>
             </div>
           )}
+        </div>
+        <div className="modal-footer">
+          <div className="modal-actions">
+            <button className="btn-secondary" onClick={onClose}>
+              Close
+            </button>
+          </div>
+          <div className="modal-hint">
+            <small>Press ESC or click outside to close</small>
+          </div>
         </div>
       </div>
     </div>

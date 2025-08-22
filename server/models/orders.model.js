@@ -1,9 +1,31 @@
 // server/models/orders.model.js
 import { pool } from '../config/db.js';
 
-export const createOrderRow = async (userId, conn) => {
-  const [res] = await conn.query('INSERT INTO orders (user_id) VALUES (?)', [userId]);
-  return res.insertId;
+export const createOrderRow = async (userId, orderData, conn) => {
+  const { shipping, totalAmount } = orderData || {};
+  
+  if (shipping) {
+    // Insert with shipping information
+    const [res] = await conn.query(`
+      INSERT INTO orders (
+        user_id, total, shipping_name, shipping_email, 
+        shipping_address, shipping_city, shipping_postal_code, shipping_country
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`, [
+      userId, 
+      totalAmount || 0, 
+      shipping.fullName || null, 
+      shipping.email || null,
+      shipping.address || null, 
+      shipping.city || null, 
+      shipping.postalCode || null, 
+      shipping.country || null
+    ]);
+    return res.insertId;
+  } else {
+    // Fallback to simple insert for backward compatibility
+    const [res] = await conn.query('INSERT INTO orders (user_id, total) VALUES (?, ?)', [userId, totalAmount || 0]);
+    return res.insertId;
+  }
 };
 
 export const getCartForOrder = async (userId, conn) => {
@@ -27,8 +49,19 @@ export const updateProductStock = async (productId, newStock, conn) => {
 };
 
 export const findOrdersByUser = async (userId) => {
-  const [rows] = await pool.query('SELECT * FROM orders WHERE user_id = ? ORDER BY created_at DESC', [userId]);
-  return rows;
+  const [orders] = await pool.query('SELECT * FROM orders WHERE user_id = ? ORDER BY created_at DESC', [userId]);
+  
+  // For each order, fetch its items
+  for (const order of orders) {
+    const [items] = await pool.query(`
+      SELECT oi.quantity, oi.price, p.name, p.image_id, p.id as product_id
+      FROM order_items oi
+      JOIN products p ON p.id = oi.product_id
+      WHERE oi.order_id = ?`, [order.id]);
+    order.items = items;
+  }
+  
+  return orders;
 };
 
 export const findOrderById = async (orderId) => {

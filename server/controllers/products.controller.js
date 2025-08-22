@@ -31,6 +31,8 @@ export const getAllProducts = async (req, res, next) => {
       category: req.query.category,
       minPrice: req.query.minPrice,
       maxPrice: req.query.maxPrice,
+      minRating: req.query.minRating,
+      inStock: req.query.inStock,
       sortBy: req.query.sortBy,
       limit: req.query.limit ? parseInt(req.query.limit) : null,
       offset: req.query.offset !== undefined ? parseInt(req.query.offset) : null

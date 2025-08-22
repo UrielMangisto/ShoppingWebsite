@@ -14,18 +14,47 @@ export const createOrder = async (req, res, next) => {
     const cart = await getCartForOrder(req.user.id, conn);
     if (!cart.length) return res.status(400).json({ message: 'Cart is empty' });
 
-    const orderId = await createOrderRow(req.user.id, conn);
-
+    // Calculate total from cart items (server-side calculation for security)
+    let cartTotal = 0;
     for (const item of cart) {
       const newStock = item.stock - item.quantity;
       if (newStock < 0) throw new Error(`Not enough stock for product ${item.product_id}`);
+      cartTotal += item.price * item.quantity;
+    }
+
+    // Calculate additional costs
+    const shippingCost = cartTotal >= 50 ? 0 : 5.99;
+    const tax = cartTotal * 0.1; // 10% tax
+    const finalTotal = cartTotal + shippingCost + tax;
+
+    // Create order with calculated total and shipping info
+    const orderData = {
+      shipping: req.body.shipping,
+      totalAmount: parseFloat(finalTotal.toFixed(2))
+    };
+
+    const orderId = await createOrderRow(req.user.id, orderData, conn);
+
+    // Process cart items
+    for (const item of cart) {
+      const newStock = item.stock - item.quantity;
       await insertOrderItem(orderId, item, conn);
       await updateProductStock(item.product_id, newStock, conn);
     }
 
     await clearCart(req.user.id, conn);
     await conn.commit();
-    res.status(201).json({ message: 'Order created', orderId });
+    res.status(201).json({ 
+      message: 'Order created successfully', 
+      orderId,
+      total: finalTotal,
+      breakdown: {
+        subtotal: cartTotal,
+        shipping: shippingCost,
+        tax: tax,
+        total: finalTotal
+      }
+    });
   } catch (e) {
     await conn.rollback();
     next(e);

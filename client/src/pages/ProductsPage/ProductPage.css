@@ -148,6 +148,14 @@
   margin: 0 auto 1rem;
 }
 
+.loading-spinner.small {
+  width: 20px;
+  height: 20px;
+  border-width: 2px;
+  margin: 0 0.5rem 0 0;
+  display: inline-block;
+}
+
 @keyframes spin {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
@@ -156,6 +164,35 @@
 .loading-container p {
   color: #666;
   font-size: 1.1rem;
+}
+
+/* Load More Button */
+.load-more-container {
+  text-align: center;
+  margin-top: 3rem;
+  padding: 2rem 0;
+}
+
+.load-more-btn {
+  padding: 1rem 2rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+  min-width: 200px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.load-more-btn:disabled {
+  background: #6c757d;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.load-more-btn:disabled:hover {
+  background: #6c757d;
+  transform: none;
 }
 
 .error-container {

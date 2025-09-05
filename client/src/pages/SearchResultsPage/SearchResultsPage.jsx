@@ -79,9 +79,7 @@ const SearchResultsPage = () => {
       params.set('minRating', filters.minRating);
     }
     
-    if (filters.inStock !== null && filters.inStock !== undefined) {
-      params.set('inStock', filters.inStock);
-    }
+
     
     setSearchParams(params);
   };
@@ -96,7 +94,6 @@ const SearchResultsPage = () => {
     if (filters.minPrice !== null && filters.minPrice !== undefined) count++;
     if (filters.maxPrice !== null && filters.maxPrice !== undefined) count++;
     if (filters.minRating !== null && filters.minRating !== undefined) count++;
-    if (filters.inStock !== null && filters.inStock !== undefined) count++;
     return count;
   };
 

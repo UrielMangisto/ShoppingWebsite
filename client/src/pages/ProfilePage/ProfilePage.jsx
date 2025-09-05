@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { orderService } from '../../services/orderService';
+import OrderStatus from '../../components/orders/OrderStatus';
 import './ProfilePage.css';
 
 const ProfilePage = () => {
@@ -200,9 +201,7 @@ const ProfilePage = () => {
                             </p>
                           </div>
                           <div className="order-status">
-                            <span className={`status-badge ${order.status || 'pending'}`}>
-                              {order.status || 'Pending'}
-                            </span>
+                            <OrderStatus status={order.status} />
                           </div>
                         </div>
 

@@ -47,7 +47,6 @@ const CategoryPage = () => {
         minPrice: priceRange.min || null,
         maxPrice: priceRange.max || null,
         minRating: null,
-        inStock: null
       };
       
       setFilters(filters);
@@ -68,7 +67,6 @@ const CategoryPage = () => {
         minPrice: priceRange.min || null,
         maxPrice: priceRange.max || null,
         minRating: null,
-        inStock: null
       };
       
       setFilters(filters);
@@ -86,7 +84,6 @@ const CategoryPage = () => {
         minPrice: null,
         maxPrice: null,
         minRating: null,
-        inStock: null
       };
       fetchProducts(filters);
     }

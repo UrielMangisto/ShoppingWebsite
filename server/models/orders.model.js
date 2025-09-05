@@ -49,7 +49,7 @@ export const updateProductStock = async (productId, newStock, conn) => {
 };
 
 export const findOrdersByUser = async (userId) => {
-  const [orders] = await pool.query('SELECT * FROM orders WHERE user_id = ? ORDER BY created_at DESC', [userId]);
+  const [orders] = await pool.query('SELECT id, user_id, status, total, shipping_name, shipping_email, shipping_address, shipping_city, shipping_postal_code, shipping_country, created_at FROM orders WHERE user_id = ? ORDER BY created_at DESC', [userId]);
   
   // For each order, fetch its items
   for (const order of orders) {
@@ -65,7 +65,7 @@ export const findOrdersByUser = async (userId) => {
 };
 
 export const findOrderById = async (orderId) => {
-  const [[order]] = await pool.query('SELECT * FROM orders WHERE id = ?', [orderId]);
+  const [[order]] = await pool.query('SELECT id, user_id, status, total, shipping_name, shipping_email, shipping_address, shipping_city, shipping_postal_code, shipping_country, created_at FROM orders WHERE id = ?', [orderId]);
   return order;
 };
 
@@ -80,7 +80,7 @@ export const findOrderItems = async (orderId) => {
 
 export const findAllOrdersWithUser = async () => {
   const [rows] = await pool.query(`
-    SELECT o.id, o.created_at, u.name, u.email
+    SELECT o.id, o.status, o.total, o.created_at, u.name, u.email
     FROM orders o
     JOIN users u ON u.id = o.user_id
     ORDER BY o.created_at DESC`);

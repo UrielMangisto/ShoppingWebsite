@@ -199,6 +199,35 @@
   margin-top: 1.5rem;
 }
 
+/* Price Filter Actions */
+.price-filter-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.price-filter-actions .btn {
+  flex: 1;
+  font-size: 0.85rem;
+  padding: 0.5rem 0.75rem;
+}
+
+.price-filter-actions .btn.pulse {
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    background-color: #007bff;
+  }
+  50% {
+    background-color: #0056b3;
+  }
+  100% {
+    background-color: #007bff;
+  }
+}
+
 /* Rating Filter */
 .rating-filter {
   display: flex;

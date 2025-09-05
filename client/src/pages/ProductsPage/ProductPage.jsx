@@ -9,19 +9,22 @@ const ProductsPage = () => {
   const { 
     products, 
     loading, 
+    loadMoreLoading,
     error, 
     filters, 
     sortBy, 
     setSortBy, 
     clearFilters, 
-    fetchProducts 
+    fetchProducts,
+    loadMoreProducts,
+    hasMore
   } = useProducts();
   
   const [showMobileFilters, setShowMobileFilters] = useState(false);
 
   // Fetch products when filters or sorting change
   useEffect(() => {
-    fetchProducts();
+    fetchProducts(true); // Reset pagination when filters or sorting change
   }, [filters, sortBy]);
 
   const handleSortChange = (e) => {
@@ -34,7 +37,6 @@ const ProductsPage = () => {
     if (filters.minPrice !== null && filters.minPrice !== undefined) count++;
     if (filters.maxPrice !== null && filters.maxPrice !== undefined) count++;
     if (filters.minRating !== null && filters.minRating !== undefined) count++;
-    if (filters.inStock !== null && filters.inStock !== undefined) count++;
     return count;
   };
 
@@ -93,7 +95,7 @@ const ProductsPage = () => {
                 <p>{error}</p>
                 <button 
                   className="btn btn-primary"
-                  onClick={() => fetchProducts()}
+                  onClick={() => fetchProducts(true)}
                 >
                   Try Again
                 </button>
@@ -136,6 +138,26 @@ const ProductsPage = () => {
                     </div>
                   )}
                 </div>
+
+                {/* Load More Button */}
+                {products.length > 0 && hasMore && (
+                  <div className="load-more-container">
+                    <button 
+                      className="btn btn-primary load-more-btn"
+                      onClick={loadMoreProducts}
+                      disabled={loadMoreLoading}
+                    >
+                      {loadMoreLoading ? (
+                        <>
+                          <div className="loading-spinner small"></div>
+                          Loading more...
+                        </>
+                      ) : (
+                        'Load More Products'
+                      )}
+                    </button>
+                  </div>
+                )}
               </>
             )}
           </main>

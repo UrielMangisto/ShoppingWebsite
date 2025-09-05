@@ -1,4 +1,5 @@
 import React from 'react';
+import OrderStatus from '../../../orders/OrderStatus';
 import './OrderTable.css';
 
 const OrderTable = ({ orders, onViewDetails, formatDate }) => {
@@ -28,9 +29,7 @@ const OrderTable = ({ orders, onViewDetails, formatDate }) => {
                 <td className="email-cell">{order.email}</td>
                 <td>{formatDate(order.created_at)}</td>
                 <td>
-                  <span className="status-badge completed">
-                    ✅ Completed
-                  </span>
+                  <OrderStatus status={order.status} />
                 </td>
                 <td>
                   <div className="order-action-buttons">

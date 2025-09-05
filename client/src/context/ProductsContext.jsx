@@ -9,11 +9,23 @@ const productsReducer = (state, action) => {
   switch (action.type) {
     case 'SET_LOADING':
       return { ...state, loading: action.payload };
+    case 'SET_LOAD_MORE_LOADING':
+      return { ...state, loadMoreLoading: action.payload };
     case 'SET_PRODUCTS':
       return { 
         ...state, 
         products: action.payload,
-        loading: false 
+        loading: false,
+        currentPage: 1,
+        hasMore: action.payload.length === 15 // 15 items per page
+      };
+    case 'APPEND_PRODUCTS':
+      return { 
+        ...state, 
+        products: [...state.products, ...action.payload],
+        loadMoreLoading: false,
+        currentPage: state.currentPage + 1,
+        hasMore: action.payload.length === 15
       };
     case 'SET_SINGLE_PRODUCT':
       return { 
@@ -22,13 +34,23 @@ const productsReducer = (state, action) => {
         loading: false 
       };
     case 'SET_ERROR':
-      return { ...state, error: action.payload, loading: false };
+      return { ...state, error: action.payload, loading: false, loadMoreLoading: false };
     case 'CLEAR_ERROR':
       return { ...state, error: null };
     case 'SET_FILTERS':
-      return { ...state, filters: action.payload };
+      return { 
+        ...state, 
+        filters: action.payload,
+        currentPage: 1,
+        hasMore: true
+      };
     case 'SET_SORT':
-      return { ...state, sortBy: action.payload };
+      return { 
+        ...state, 
+        sortBy: action.payload,
+        currentPage: 1,
+        hasMore: true
+      };
     case 'CLEAR_FILTERS':
       return { 
         ...state, 
@@ -37,8 +59,9 @@ const productsReducer = (state, action) => {
           minPrice: null,
           maxPrice: null,
           minRating: null,
-          inStock: null
-        }
+        },
+        currentPage: 1,
+        hasMore: true
       };
     default:
       return state;
@@ -49,13 +72,15 @@ const initialState = {
   products: [],
   currentProduct: null,
   loading: false,
+  loadMoreLoading: false,
   error: null,
+  currentPage: 1,
+  hasMore: true,
   filters: {
     categories: [],
     minPrice: null,
     maxPrice: null,
     minRating: null,
-    inStock: null
   },
   sortBy: 'name_asc'
 };
@@ -63,13 +88,21 @@ const initialState = {
 export const ProductsProvider = ({ children }) => {
   const [state, dispatch] = useReducer(productsReducer, initialState);
 
-  const fetchProducts = async (customFilters = null) => {
+  const fetchProducts = async (customFilters = null, resetList = true) => {
     try {
-      dispatch({ type: 'SET_LOADING', payload: true });
+      if (resetList) {
+        dispatch({ type: 'SET_LOADING', payload: true });
+      } else {
+        dispatch({ type: 'SET_LOAD_MORE_LOADING', payload: true });
+      }
       dispatch({ type: 'CLEAR_ERROR' });
       
       const filters = customFilters || state.filters;
       const params = {};
+      
+      // Add pagination
+      params.limit = 15;
+      params.offset = resetList ? 0 : (state.currentPage * 15);
       
       // Add sorting
       if (state.sortBy) {
@@ -92,13 +125,15 @@ export const ProductsProvider = ({ children }) => {
       if (filters.minRating !== null && filters.minRating !== undefined) {
         params.minRating = filters.minRating;
       }
-      
-      if (filters.inStock !== null && filters.inStock !== undefined) {
-        params.inStock = filters.inStock;
-      }
+
       
       const products = await productsService.getAllProducts(params);
-      dispatch({ type: 'SET_PRODUCTS', payload: products });
+      
+      if (resetList) {
+        dispatch({ type: 'SET_PRODUCTS', payload: products });
+      } else {
+        dispatch({ type: 'APPEND_PRODUCTS', payload: products });
+      }
       
       return products;
     } catch (error) {
@@ -128,7 +163,10 @@ export const ProductsProvider = ({ children }) => {
       dispatch({ type: 'CLEAR_ERROR' });
       
       const filters = customFilters || state.filters;
-      const params = {};
+      const params = {
+        limit: 15,
+        offset: 0
+      };
       
       // Add search term
       if (searchTerm && searchTerm.trim()) {
@@ -157,9 +195,6 @@ export const ProductsProvider = ({ children }) => {
         params.minRating = filters.minRating;
       }
       
-      if (filters.inStock !== null && filters.inStock !== undefined) {
-        params.inStock = filters.inStock;
-      }
       
       const products = await productsService.getAllProducts(params);
       dispatch({ type: 'SET_PRODUCTS', payload: products });
@@ -168,6 +203,16 @@ export const ProductsProvider = ({ children }) => {
     } catch (error) {
       dispatch({ type: 'SET_ERROR', payload: error.message });
       throw error;
+    }
+  };
+
+  const loadMoreProducts = async () => {
+    if (state.loadMoreLoading || !state.hasMore) return;
+    
+    try {
+      await fetchProducts(null, false);
+    } catch (error) {
+      console.error('Error loading more products:', error);
     }
   };
 
@@ -192,6 +237,7 @@ export const ProductsProvider = ({ children }) => {
     fetchProducts,
     fetchProduct,
     searchProducts,
+    loadMoreProducts,
     setFilters,
     setSortBy,
     clearFilters,

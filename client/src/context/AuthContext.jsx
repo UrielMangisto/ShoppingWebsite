@@ -57,12 +57,6 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // Check if token is expired  
-  const isTokenExpired = (token) => {
-    const decoded = decodeToken(token);
-    if (!decoded || !decoded.exp) return true;
-    return decoded.exp * 1000 < Date.now();
-  };
 
   // Check if user is logged in on app start
   useEffect(() => {

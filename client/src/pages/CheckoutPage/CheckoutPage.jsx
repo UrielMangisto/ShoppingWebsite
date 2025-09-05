@@ -237,6 +237,7 @@ const CheckoutPage = () => {
                       required
                     >
                       <option value="">Select country</option>
+                      <option value="IL">Israel</option>
                       <option value="US">United States</option>
                       <option value="CA">Canada</option>
                       <option value="UK">United Kingdom</option>

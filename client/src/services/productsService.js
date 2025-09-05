@@ -47,11 +47,8 @@ export const productsService = {
     return api.upload('/products', formData, token);
   },
 
-  updateProduct: async (id, productData) => {
-    console.log('🔧 updateProduct called with:', { id, productData });
-    
+  updateProduct: async (id, productData) => {    
     const token = authService.getToken();
-    console.log('🔑 Token:', token ? 'Present' : 'Missing');
     
     const formData = new FormData();
 
@@ -60,41 +57,29 @@ export const productsService = {
     // Add fields that are present - exactly like the backend expects
     if (name !== undefined && name !== null) {
       formData.append('name', name);
-      console.log('📝 Added name:', name);
     }
     if (description !== undefined && description !== null) {
       formData.append('description', description);
-      console.log('📝 Added description:', description.substring(0, 50) + '...');
     }
     if (price !== undefined && price !== null) {
       formData.append('price', price);
-      console.log('💰 Added price:', price);
     }
     if (stock !== undefined && stock !== null) {
       formData.append('stock', stock);
-      console.log('📦 Added stock:', stock);
     }
     if (category_id !== undefined && category_id !== null) {
       formData.append('category_id', category_id);
-      console.log('🏷️ Added category_id:', category_id);
     }
     
     // Only add image if it's a File object (new image selected)
     if (image && image instanceof File) {
       formData.append('image', image);
-      console.log('🖼️ Added image:', image.name);
-    } else {
-      console.log('🖼️ No new image to upload');
     }
-
-    console.log('🚀 Sending PUT request to /products/' + id);
     
     try {
       const result = await api.uploadPut(`/products/${id}`, formData, token);
-      console.log('✅ Update successful:', result);
       return result;
     } catch (error) {
-      console.error('❌ Update failed:', error);
       throw error;
     }
   },

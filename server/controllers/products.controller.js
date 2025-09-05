@@ -32,7 +32,6 @@ export const getAllProducts = async (req, res, next) => {
       minPrice: req.query.minPrice,
       maxPrice: req.query.maxPrice,
       minRating: req.query.minRating,
-      inStock: req.query.inStock,
       sortBy: req.query.sortBy,
       limit: req.query.limit ? parseInt(req.query.limit) : null,
       offset: req.query.offset !== undefined ? parseInt(req.query.offset) : null
@@ -67,21 +66,11 @@ export const search = async (req, res, next) => {
   }
 };
 
-export const recommend = async (req, res, next) => {
-  try {
-    const products = await findAllProducts({ recommended: true });
-    const transformedProducts = products.map(transformProductForResponse);
-    res.json(transformedProducts);
-  } catch (e) {
-    next(e);
-  }
-};
 
 export const createProduct = async (req, res, next) => {
   try {
     let imageId = null;
-    
-    // אם יש תמונה, שמור אותה ב-MongoDB
+  
     if (req.file) {
       const imageDoc = new Image({
         filename: req.file.originalname,
@@ -115,7 +104,6 @@ export const updateProduct = async (req, res, next) => {
   try {
     let updateData = { ...req.body };
     
-    // אם יש תמונה חדשה, שמור אותה ב-MongoDB
     if (req.file) {
       const imageDoc = new Image({
         filename: req.file.originalname,

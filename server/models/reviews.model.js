@@ -37,15 +37,3 @@ export const updateReviewInDB = async ({ id, user_id, rating, comment }) => {
   return res.affectedRows;
 };
 
-// optional helpers
-export const hasPurchasedProduct = async (user_id, product_id) => {
-  const [rows] = await pool.query(
-    `SELECT 1
-     FROM order_items oi
-     JOIN orders o ON o.id = oi.order_id
-     WHERE o.user_id = ? AND oi.product_id = ?
-     LIMIT 1`,
-    [user_id, product_id]
-  );
-  return rows.length > 0;
-};

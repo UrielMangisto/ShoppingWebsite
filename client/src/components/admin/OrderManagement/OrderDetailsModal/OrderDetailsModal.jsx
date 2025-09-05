@@ -1,4 +1,5 @@
 import React from 'react';
+import OrderStatus from '../../../orders/OrderStatus';
 import './OrderDetailsModal.css';
 
 const OrderDetailsModal = ({ 
@@ -50,7 +51,7 @@ const OrderDetailsModal = ({
               <div className="info-item">
                 <span className="label">Status:</span>
                 <span className="value">
-                  <span className="status-badge completed">✅ Completed</span>
+                  <OrderStatus status={order.order.status} />
                 </span>
               </div>
             </div>

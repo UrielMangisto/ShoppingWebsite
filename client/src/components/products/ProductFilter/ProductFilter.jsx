@@ -1,5 +1,5 @@
 // src/components/products/ProductFilter/ProductFilter.jsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useCategories } from '../../../hooks/useCategories';
 import { useProducts } from '../../../context/ProductsContext';
 import './ProductFilter.css';
@@ -8,6 +8,20 @@ const ProductFilter = ({ isLoading }) => {
   const { categories, loading: loadingCategories } = useCategories();
   const { filters, setFilters, clearFilters } = useProducts();
   const [isCollapsed, setIsCollapsed] = useState(false);
+  
+  // Local state for price inputs - no auto-apply
+  const [localMinPrice, setLocalMinPrice] = useState(
+    filters.minPrice === null || filters.minPrice === undefined ? '' : filters.minPrice
+  );
+  const [localMaxPrice, setLocalMaxPrice] = useState(
+    filters.maxPrice === null || filters.maxPrice === undefined ? '' : filters.maxPrice
+  );
+
+  // Update local state when filters change externally
+  useEffect(() => {
+    setLocalMinPrice(filters.minPrice === null || filters.minPrice === undefined ? '' : filters.minPrice);
+    setLocalMaxPrice(filters.maxPrice === null || filters.maxPrice === undefined ? '' : filters.maxPrice);
+  }, [filters.minPrice, filters.maxPrice]);
 
   const handleFilterChange = (filterType, value) => {
     const newFilters = { ...filters };
@@ -36,13 +50,52 @@ const ProductFilter = ({ isLoading }) => {
     setFilters(newFilters);
   };
 
+  // Apply price filter - only when user clicks the button
+  const applyPriceFilter = () => {
+    const newFilters = { ...filters };
+    
+    // Apply min price
+    if (localMinPrice === '' || localMinPrice === null || localMinPrice === undefined) {
+      newFilters.minPrice = null;
+    } else {
+      const numValue = parseFloat(localMinPrice);
+      newFilters.minPrice = isNaN(numValue) ? null : numValue;
+    }
+    
+    // Apply max price
+    if (localMaxPrice === '' || localMaxPrice === null || localMaxPrice === undefined) {
+      newFilters.maxPrice = null;
+    } else {
+      const numValue = parseFloat(localMaxPrice);
+      newFilters.maxPrice = isNaN(numValue) ? null : numValue;
+    }
+    
+    setFilters(newFilters);
+  };
+
+  // Clear price inputs
+  const clearPriceFilter = () => {
+    setLocalMinPrice('');
+    setLocalMaxPrice('');
+    const newFilters = { ...filters };
+    newFilters.minPrice = null;
+    newFilters.maxPrice = null;
+    setFilters(newFilters);
+  };
+
+  // Check if price filter has pending changes
+  const hasPricePendingChanges = () => {
+    const currentMin = filters.minPrice === null || filters.minPrice === undefined ? '' : filters.minPrice.toString();
+    const currentMax = filters.maxPrice === null || filters.maxPrice === undefined ? '' : filters.maxPrice.toString();
+    return localMinPrice.toString() !== currentMin || localMaxPrice.toString() !== currentMax;
+  };
+
   const getActiveFilterCount = () => {
     let count = 0;
     if (filters.categories?.length > 0) count++;
     if (filters.minPrice !== null && filters.minPrice !== undefined) count++;
     if (filters.maxPrice !== null && filters.maxPrice !== undefined) count++;
     if (filters.minRating !== null && filters.minRating !== undefined) count++;
-    if (filters.inStock !== null && filters.inStock !== undefined) count++;
     return count;
   };
 
@@ -78,8 +131,8 @@ const ProductFilter = ({ isLoading }) => {
                 min="0"
                 step="0.01"
                 placeholder="$0"
-                value={filters.minPrice === null || filters.minPrice === undefined ? '' : filters.minPrice}
-                onChange={(e) => handleFilterChange('minPrice', e.target.value)}
+                value={localMinPrice}
+                onChange={(e) => setLocalMinPrice(e.target.value)}
                 disabled={isLoading}
                 className="price-input"
               />
@@ -92,12 +145,32 @@ const ProductFilter = ({ isLoading }) => {
                 min="0"
                 step="0.01"
                 placeholder="$999"
-                value={filters.maxPrice === null || filters.maxPrice === undefined ? '' : filters.maxPrice}
-                onChange={(e) => handleFilterChange('maxPrice', e.target.value)}
+                value={localMaxPrice}
+                onChange={(e) => setLocalMaxPrice(e.target.value)}
                 disabled={isLoading}
                 className="price-input"
               />
             </div>
+          </div>
+          
+          {/* Price Filter Buttons */}
+          <div className="price-filter-actions">
+            <button
+              type="button"
+              onClick={applyPriceFilter}
+              disabled={isLoading || (!localMinPrice && !localMaxPrice)}
+              className={`btn btn-primary btn-sm ${hasPricePendingChanges() ? 'pulse' : ''}`}
+            >
+              Apply
+            </button>
+            <button
+              type="button"
+              onClick={clearPriceFilter}
+              disabled={isLoading || (!filters.minPrice && !filters.maxPrice && !localMinPrice && !localMaxPrice)}
+              className="btn btn-outline btn-sm"
+            >
+              Clear
+            </button>
           </div>
         </div>
 
@@ -129,43 +202,6 @@ const ProductFilter = ({ isLoading }) => {
                 disabled={isLoading}
               />
               <span className="rating-text">Any rating</span>
-            </label>
-          </div>
-        </div>
-
-        {/* Stock Filter */}
-        <div className="filter-section">
-          <h4>Availability</h4>
-          <div className="stock-filter">
-            <label className="stock-item">
-              <input
-                type="radio"
-                name="stockFilter"
-                checked={filters.inStock === null || filters.inStock === undefined}
-                onChange={() => handleFilterChange('inStock', null)}
-                disabled={isLoading}
-              />
-              <span>All products</span>
-            </label>
-            <label className="stock-item">
-              <input
-                type="radio"
-                name="stockFilter"
-                checked={filters.inStock === true}
-                onChange={() => handleFilterChange('inStock', true)}
-                disabled={isLoading}
-              />
-              <span>In stock only</span>
-            </label>
-            <label className="stock-item">
-              <input
-                type="radio"
-                name="stockFilter"
-                checked={filters.inStock === false}
-                onChange={() => handleFilterChange('inStock', false)}
-                disabled={isLoading}
-              />
-              <span>Out of stock</span>
             </label>
           </div>
         </div>

@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { orderService } from '../../services/orderService';
+import OrderStatus from '../../components/orders/OrderStatus';
 import './OrderDetailPage.css';
 
 const OrderDetailPage = () => {
@@ -143,9 +144,7 @@ const OrderDetailPage = () => {
         <div className="order-summary-card">
           <div className="summary-header">
             <h2>Order Summary</h2>
-            <span className={`status-badge ${order.status || 'pending'}`}>
-              {order.status || 'Pending'}
-            </span>
+            <OrderStatus status={order.status} />
           </div>
           
           <div className="summary-details">
@@ -160,9 +159,7 @@ const OrderDetailPage = () => {
             <div className="detail-item">
               <span className="label">Status:</span>
               <span className="value">
-                <span className={`status-badge ${order.status || 'pending'}`}>
-                  {order.status || 'Pending'}
-                </span>
+                <OrderStatus status={order.status} />
               </span>
             </div>
             <div className="detail-item">

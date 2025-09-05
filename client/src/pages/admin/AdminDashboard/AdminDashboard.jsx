@@ -156,6 +156,15 @@ const AdminDashboard = () => {
                   <h3>Manage Categories</h3>
                   <p>Add and organize categories</p>
                 </button>
+
+                <button 
+                  className="action-card"
+                  onClick={() => navigate('/admin/setup')}
+                >
+                  <div className="action-icon">🔧</div>
+                  <h3>Admin Setup</h3>
+                  <p>Create new admin accounts</p>
+                </button>
               </div>
             </div>
           </>

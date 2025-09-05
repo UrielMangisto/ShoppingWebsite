@@ -1,32 +1,36 @@
-// server/models/products.model.js
+// server/models/products.model.js - Product data access layer with advanced filtering
+// This module handles all database operations related to products
 import { pool } from '../config/db.js';
 
-// Enhanced findAllProducts function that supports filters
+// Enhanced product retrieval with comprehensive filtering and pagination support
 export const findAllProducts = async (filters = {}) => {
+  // Build dynamic SQL query with JOINs for category and rating information
   let query = `
     SELECT p.*, 
-           c.name AS category_name,
-           AVG(r.rating) as average_rating,
-           COUNT(r.id) as review_count
+           c.name AS category_name,                    -- Include category name for display
+           AVG(r.rating) as average_rating,            -- Calculate average rating from reviews
+           COUNT(r.id) as review_count                 -- Count total reviews
     FROM products p
-    LEFT JOIN categories c ON p.category_id = c.id
-    LEFT JOIN reviews r ON p.id = r.product_id
-    WHERE 1=1`;
+    LEFT JOIN categories c ON p.category_id = c.id    -- LEFT JOIN to include products without categories
+    LEFT JOIN reviews r ON p.id = r.product_id        -- LEFT JOIN to include products without reviews
+    WHERE 1=1`;  // Base WHERE clause for easy filter appending
   
-  const params = [];
+  const params = []; // Parameters array for prepared statement
 
-  // Apply filters
+  // Text search filter - searches both name and description
   if (filters.search) {
     query += ` AND (p.name LIKE ? OR p.description LIKE ?)`;
-    const searchTerm = `%${filters.search}%`;
+    const searchTerm = `%${filters.search}%`; // Add wildcards for partial matching
     params.push(searchTerm, searchTerm);
   }
 
+  // Category filter
   if (filters.category) {
     query += ` AND p.category_id = ?`;
     params.push(filters.category);
   }
 
+  // Price range filters
   if (filters.minPrice) {
     query += ` AND p.price >= ?`;
     params.push(parseFloat(filters.minPrice));
@@ -37,25 +41,16 @@ export const findAllProducts = async (filters = {}) => {
     params.push(parseFloat(filters.maxPrice));
   }
 
-  // Stock filter - must be before GROUP BY
-  if (filters.inStock !== undefined) {
-    if (filters.inStock === 'true' || filters.inStock === true) {
-      query += ` AND p.stock > 0`;
-    } else if (filters.inStock === 'false' || filters.inStock === false) {
-      query += ` AND p.stock <= 0`;
-    }
-  }
-
-  // Group by for aggregation
+  // GROUP BY required for aggregate functions (AVG, COUNT)
   query += ` GROUP BY p.id, c.name`;
 
-  // Rating filter - must be after GROUP BY (using HAVING)
+  // Rating filter - applied after GROUP BY using HAVING clause
   if (filters.minRating) {
     query += ` HAVING average_rating >= ?`;
     params.push(parseFloat(filters.minRating));
   }
 
-  // Sorting
+  // Sorting options - whitelist valid sort combinations
   const validSorts = {
     'name_asc': 'p.name ASC',
     'name_desc': 'p.name DESC',
@@ -68,10 +63,10 @@ export const findAllProducts = async (filters = {}) => {
   if (filters.sortBy && validSorts[filters.sortBy]) {
     query += ` ORDER BY ${validSorts[filters.sortBy]}`;
   } else {
-    query += ` ORDER BY p.name ASC`;
+    query += ` ORDER BY p.name ASC`; // Default sort by name
   }
 
-  // Pagination
+  // Pagination support for "Load More" functionality
   if (filters.limit) {
     query += ` LIMIT ?`;
     params.push(parseInt(filters.limit));
@@ -82,47 +77,71 @@ export const findAllProducts = async (filters = {}) => {
     }
   }
 
+  // Execute query with prepared statement for security
   const [rows] = await pool.query(query, params);
   return rows;
 };
 
+// Find single product by ID with aggregated rating data
 export const findProductById = async (id) => {
   const [rows] = await pool.query(`
     SELECT p.*, 
-           c.name AS category_name,
-           AVG(r.rating) as average_rating,
-           COUNT(r.id) as review_count
+           c.name AS category_name,                    -- Include category information
+           AVG(r.rating) as average_rating,            -- Calculate average rating
+           COUNT(r.id) as review_count                 -- Count total reviews
     FROM products p
     LEFT JOIN categories c ON p.category_id = c.id
     LEFT JOIN reviews r ON p.id = r.product_id
     WHERE p.id = ?
     GROUP BY p.id, c.name`, [id]);
-  return rows[0];
+  return rows[0]; // Return single product or undefined
 };
 
-export const createProductRow = async ({ name, description, price, stock = 0, category_id = null, image_id = null }) => {
+// Create new product with all optional fields
+export const createProductRow = async ({ 
+  name, 
+  description, 
+  price, 
+  stock = 0,           // Default stock to 0 if not provided
+  category_id = null,  // Allow products without category
+  image_id = null      // Allow products without image
+}) => {
   const [result] = await pool.query(
     `INSERT INTO products (name, description, price, stock, category_id, image_id)
      VALUES (?, ?, ?, ?, ?, ?)`,
     [name, description, price, stock, category_id, image_id]
   );
-  return result.insertId;
+  return result.insertId; // Return ID of newly created product
 };
 
+// Partial product update with field validation
 export const updateProductPartial = async (id, fields) => {
-  const allowed = ['name','description','price','stock','category_id','image_id'];
-  const set = [];
-  const vals = [];
-  for (const k of allowed) {
-    if (fields[k] !== undefined) { set.push(`${k} = ?`); vals.push(fields[k]); }
+  // Security: Whitelist allowed fields to prevent unauthorized updates
+  const allowedFields = ['name', 'description', 'price', 'stock', 'category_id', 'image_id'];
+  const setClause = [];
+  const values = [];
+  
+  // Build dynamic UPDATE query with only provided fields
+  for (const fieldName of allowedFields) {
+    if (fields[fieldName] !== undefined) { 
+      setClause.push(`${fieldName} = ?`); 
+      values.push(fields[fieldName]); 
+    }
   }
-  if (!set.length) return 0;
-  vals.push(id);
-  const [res] = await pool.query(`UPDATE products SET ${set.join(', ')} WHERE id = ?`, vals);
-  return res.affectedRows;
+  
+  // Return early if no valid fields to update
+  if (!setClause.length) return 0;
+  
+  values.push(id); // Add product ID for WHERE clause
+  const [result] = await pool.query(
+    `UPDATE products SET ${setClause.join(', ')} WHERE id = ?`, 
+    values
+  );
+  return result.affectedRows;
 };
 
+// Delete product (admin only operation)
 export const deleteProductById = async (id) => {
-  const [res] = await pool.query('DELETE FROM products WHERE id = ?', [id]);
-  return res.affectedRows;
+  const [result] = await pool.query('DELETE FROM products WHERE id = ?', [id]);
+  return result.affectedRows;
 };
